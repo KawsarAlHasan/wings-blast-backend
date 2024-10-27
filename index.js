@@ -29,6 +29,9 @@ app.use("/api/v1/flavor", require("./router/flavorRoute"));
 app.use("/api/v1/foodmenu", require("./router/foodMenuRoute"));
 app.use("/api/v1/food-details", require("./router/foodDetailsRoute"));
 app.use("/api/v1/dip", require("./router/dipRoute"));
+app.use("/api/v1/side", require("./router/sideRoute"));
+app.use("/api/v1/beverage", require("./router/beverageRoute"));
+app.use("/api/v1/drink", require("./router/drinkRoute"));
 
 const port = process.env.PORT || 8000;
 

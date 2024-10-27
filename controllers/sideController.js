@@ -1,9 +1,9 @@
 const db = require("../config/db");
 
-// create Dip
-exports.createDip = async (req, res) => {
+// create Side
+exports.createSide = async (req, res) => {
   try {
-    const { name, cal, price } = req.body;
+    const { name, cal, price, size } = req.body;
 
     if (!name || !cal || !price) {
       return res.status(400).send({
@@ -18,172 +18,173 @@ exports.createDip = async (req, res) => {
       image = `/public/images/${images.filename}`;
     }
 
-    // Insert dip into the database
+    // Insert Side into the database
     const [result] = await db.query(
-      "INSERT INTO dip (name, image, cal, price) VALUES (?, ?, ?, ?)",
-      [name, image, cal, price]
+      "INSERT INTO side (name, image, cal, price, size) VALUES (?, ?, ?, ?, ?)",
+      [name, image, cal, price, size || ""]
     );
 
     // Check if the insertion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to insert dip, please try again",
+        message: "Failed to insert Side, please try again",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "dip inserted successfully",
+      message: "Side inserted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An error occurred while inserting the dip",
+      message: "An error occurred while inserting the Side",
       error: error.message,
     });
   }
 };
 
-// get all Dip
-exports.getAllDip = async (req, res) => {
+// get all Side
+exports.getAllSide = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM dip");
+    const [data] = await db.query("SELECT * FROM side");
 
     res.status(200).send({
       success: true,
-      message: "Get all dip",
+      message: "Get all Side",
       data,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get All dip",
+      message: "Error in Get All Side",
       error: error.message,
     });
   }
 };
 
-// get singe Dip
-exports.getSingleDip = async (req, res) => {
+// get singe Side
+exports.getSingleSide = async (req, res) => {
   try {
     const id = req.params.id;
-    const [data] = await db.query("SELECT * FROM dip WHERE id=? ", [id]);
+    const [data] = await db.query("SELECT * FROM side WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "Side not found",
       });
     }
 
     res.status(200).send({
       success: true,
-      message: "Get Single dip",
+      message: "Get Single Side",
       data: data[0],
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get Single dip",
+      message: "Error in Get Single Side",
       error: error.message,
     });
   }
 };
 
-// update Dip
-exports.updateDip = async (req, res) => {
+// update Side
+exports.updateSide = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { name, cal, price } = req.body;
+    const { name, cal, price, size } = req.body;
 
-    const [dipPreData] = await db.query(`SELECT * FROM dip WHERE id=?`, [id]);
+    const [sidePreData] = await db.query(`SELECT * FROM side WHERE id=?`, [id]);
 
-    if (!dipPreData || dipPreData.length == 0) {
+    if (!sidePreData || sidePreData.length == 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "side not found",
       });
     }
 
     const images = req.file;
-    let image = dipPreData[0].image;
+    let image = sidePreData[0].image;
     if (images && images.path) {
       image = `/public/images/${images.filename}`;
     }
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE dip SET name=?, image=?, cal = ?, price = ? WHERE id = ?",
+      "UPDATE side SET name=?, image=?, cal = ?, price = ?, size=? WHERE id = ?",
       [
-        name || dipPreData[0].name,
+        name || sidePreData[0].name,
         image,
-        cal || dipPreData[0].cal,
-        price || dipPreData[0].price,
+        cal || sidePreData[0].cal,
+        price || sidePreData[0].price,
+        size || sidePreData[0].size,
         id,
       ]
     );
 
-    // Check if the Dip was updated successfully
+    // Check if the Side was updated successfully
     if (result.affectedRows === 0) {
       return res.status(404).send({
         success: false,
-        message: "Dip not found or no changes made",
+        message: "Side not found or no changes made",
       });
     }
 
     // Success response
     res.status(200).send({
       success: true,
-      message: "Dip updated successfully",
+      message: "Side updated successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error updating Dip",
+      message: "Error updating Side",
       error: error.message,
     });
   }
 };
 
-// delete Dip
-exports.deleteDip = async (req, res) => {
+// delete Side
+exports.deleteSide = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // Check if the dip exists in the database
-    const [dip] = await db.query(`SELECT * FROM dip WHERE id = ?`, [id]);
+    // Check if the Side exists in the database
+    const [side] = await db.query(`SELECT * FROM side WHERE id = ?`, [id]);
 
-    // If dip not found, return 404
-    if (!dip || dip.length === 0) {
+    // If side not found, return 404
+    if (!side || side.length === 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "side not found",
       });
     }
 
-    // Proceed to delete the dip
-    const [result] = await db.query(`DELETE FROM dip WHERE id = ?`, [id]);
+    // Proceed to delete the side
+    const [result] = await db.query(`DELETE FROM side WHERE id = ?`, [id]);
 
     // Check if deletion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to delete dip",
+        message: "Failed to delete side",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "dip deleted successfully",
+      message: "side deleted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error deleting dip",
+      message: "Error deleting side",
       error: error.message,
     });
   }

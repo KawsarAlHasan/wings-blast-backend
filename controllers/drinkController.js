@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
-// create Dip
-exports.createDip = async (req, res) => {
+// create Drink
+exports.createDrink = async (req, res) => {
   try {
     const { name, cal, price } = req.body;
 
@@ -18,9 +18,9 @@ exports.createDip = async (req, res) => {
       image = `/public/images/${images.filename}`;
     }
 
-    // Insert dip into the database
+    // Insert Drink into the database
     const [result] = await db.query(
-      "INSERT INTO dip (name, image, cal, price) VALUES (?, ?, ?, ?)",
+      "INSERT INTO drink (name, image, cal, price) VALUES (?, ?, ?, ?)",
       [name, image, cal, price]
     );
 
@@ -28,162 +28,164 @@ exports.createDip = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to insert dip, please try again",
+        message: "Failed to insert drink, please try again",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "dip inserted successfully",
+      message: "drink inserted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An error occurred while inserting the dip",
+      message: "An error occurred while inserting the drink",
       error: error.message,
     });
   }
 };
 
-// get all Dip
-exports.getAllDip = async (req, res) => {
+// get all drink
+exports.getAllDrink = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM dip");
+    const [data] = await db.query("SELECT * FROM drink");
 
     res.status(200).send({
       success: true,
-      message: "Get all dip",
+      message: "Get all drink",
       data,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get All dip",
+      message: "Error in Get All drink",
       error: error.message,
     });
   }
 };
 
-// get singe Dip
-exports.getSingleDip = async (req, res) => {
+// get singe drink
+exports.getSingleDrink = async (req, res) => {
   try {
     const id = req.params.id;
-    const [data] = await db.query("SELECT * FROM dip WHERE id=? ", [id]);
+    const [data] = await db.query("SELECT * FROM drink WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "drink not found",
       });
     }
 
     res.status(200).send({
       success: true,
-      message: "Get Single dip",
+      message: "Get Single drink",
       data: data[0],
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get Single dip",
+      message: "Error in Get Single drink",
       error: error.message,
     });
   }
 };
 
-// update Dip
-exports.updateDip = async (req, res) => {
+// update drink
+exports.updateDrink = async (req, res) => {
   try {
     const { id } = req.params;
 
     const { name, cal, price } = req.body;
 
-    const [dipPreData] = await db.query(`SELECT * FROM dip WHERE id=?`, [id]);
+    const [drinkPreData] = await db.query(`SELECT * FROM drink WHERE id=?`, [
+      id,
+    ]);
 
-    if (!dipPreData || dipPreData.length == 0) {
+    if (!drinkPreData || drinkPreData.length == 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "drink not found",
       });
     }
 
     const images = req.file;
-    let image = dipPreData[0].image;
+    let image = drinkPreData[0].image;
     if (images && images.path) {
       image = `/public/images/${images.filename}`;
     }
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE dip SET name=?, image=?, cal = ?, price = ? WHERE id = ?",
+      "UPDATE drink SET name=?, image=?, cal = ?, price = ? WHERE id = ?",
       [
-        name || dipPreData[0].name,
+        name || drinkPreData[0].name,
         image,
-        cal || dipPreData[0].cal,
-        price || dipPreData[0].price,
+        cal || drinkPreData[0].cal,
+        price || drinkPreData[0].price,
         id,
       ]
     );
 
-    // Check if the Dip was updated successfully
+    // Check if the drink was updated successfully
     if (result.affectedRows === 0) {
       return res.status(404).send({
         success: false,
-        message: "Dip not found or no changes made",
+        message: "drink not found or no changes made",
       });
     }
 
     // Success response
     res.status(200).send({
       success: true,
-      message: "Dip updated successfully",
+      message: "drink updated successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error updating Dip",
+      message: "Error updating drink",
       error: error.message,
     });
   }
 };
 
-// delete Dip
-exports.deleteDip = async (req, res) => {
+// delete drink
+exports.deleteDrink = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // Check if the dip exists in the database
-    const [dip] = await db.query(`SELECT * FROM dip WHERE id = ?`, [id]);
+    // Check if the drink exists in the database
+    const [drink] = await db.query(`SELECT * FROM drink WHERE id = ?`, [id]);
 
-    // If dip not found, return 404
-    if (!dip || dip.length === 0) {
+    // If drink not found, return 404
+    if (!drink || drink.length === 0) {
       return res.status(404).send({
         success: false,
-        message: "dip not found",
+        message: "drink not found",
       });
     }
 
-    // Proceed to delete the dip
-    const [result] = await db.query(`DELETE FROM dip WHERE id = ?`, [id]);
+    // Proceed to delete the drink
+    const [result] = await db.query(`DELETE FROM drink WHERE id = ?`, [id]);
 
     // Check if deletion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to delete dip",
+        message: "Failed to delete drink",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "dip deleted successfully",
+      message: "drink deleted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error deleting dip",
+      message: "Error deleting drink",
       error: error.message,
     });
   }
