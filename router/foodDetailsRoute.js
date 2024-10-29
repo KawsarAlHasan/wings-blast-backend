@@ -6,6 +6,7 @@ const uploadImage = require("../middleware/imagesUploader");
 const {
   createFoodDetails,
   getAllFoodDetails,
+  getSingleFoodDetails,
 } = require("../controllers/foodDeatailsController");
 
 const router = express.Router();
@@ -17,7 +18,7 @@ router.post(
   createFoodDetails
 );
 router.get("/all", getAllFoodDetails);
-// router.get("/:id", getSingleFlavor);
+router.get("/:id", getSingleFoodDetails);
 // router.put(
 //   "/update/:id",
 //   verifyAdmin,
