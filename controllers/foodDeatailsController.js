@@ -318,11 +318,11 @@ exports.getSingleFoodDetails = async (req, res) => {
     );
 
     const foodInfo = {
-      ...foodDetails,
-      dips,
-      sides,
-      drinks,
-      beverages,
+      ...foodDetails[0],
+      dips: dips[0],
+      sides: sides[0],
+      drinks: drinks[0],
+      beverages: beverages[0],
     };
 
     // Send success response with all food details
