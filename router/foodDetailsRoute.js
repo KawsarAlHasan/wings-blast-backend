@@ -3,7 +3,10 @@ const express = require("express");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
 const uploadImage = require("../middleware/imagesUploader");
-const { createFoodDetails } = require("../controllers/foodDeatailsController");
+const {
+  createFoodDetails,
+  getAllFoodDetails,
+} = require("../controllers/foodDeatailsController");
 
 const router = express.Router();
 
@@ -13,7 +16,7 @@ router.post(
   verifyAdmin,
   createFoodDetails
 );
-// router.get("/all", getAllFlavor);
+router.get("/all", getAllFoodDetails);
 // router.get("/:id", getSingleFlavor);
 // router.put(
 //   "/update/:id",

@@ -128,6 +128,111 @@ exports.createFoodDetails = async (req, res) => {
   }
 };
 
+// Get All FoodDetails
+exports.getAllFoodDetails = async (req, res) => {
+  try {
+    // Retrieve food details from the main table
+    const [foodDetails] = await db.query("SELECT * FROM food_details");
+
+    // If no data found, send an empty response
+    if (foodDetails.length === 0) {
+      return res.status(200).send({
+        success: true,
+        message: "No food details found",
+        data: [],
+      });
+    }
+
+    // Iterate over each food detail and retrieve related data (dip, side, drink, beverage)
+    for (const foodDetail of foodDetails) {
+      const food_details_id = foodDetail.id;
+
+      // Retrieve dips for this food
+      const [dips] = await db.query(
+        `SELECT
+          dff.id AS dip_food_id,
+          dff.dip_id,
+          dff.isPaid,
+          d.name AS dip_name,
+          d.image AS dip_image,
+          d.cal AS dip_cal,
+          d.price AS dip_price
+        FROM dip_for_food dff
+        LEFT JOIN dip d ON dff.dip_id = d.id
+        WHERE dff.food_details_id = ?`,
+        [food_details_id]
+      );
+
+      // Retrieve sides for this food
+      const [sides] = await db.query(
+        `SELECT
+          sff.id AS side_food_id,
+          sff.side_id,
+          sff.isPaid,
+          s.name AS side_name,
+          s.image AS side_image,
+          s.cal AS side_cal,
+          s.price AS side_price
+        FROM side_for_food sff
+        LEFT JOIN side s ON sff.side_id = s.id
+        WHERE sff.food_details_id = ?`,
+        [food_details_id]
+      );
+
+      // Retrieve drinks for this food
+      const [drinks] = await db.query(
+        `SELECT
+          dff.id AS drink_food_id,
+          dff.drink_id,
+          dff.isPaid,
+          dr.name AS drink_name,
+          dr.image AS drink_image,
+          dr.cal AS drink_cal,
+          dr.price AS drink_price
+        FROM drink_for_food dff
+        LEFT JOIN drink dr ON dff.drink_id = dr.id
+        WHERE dff.food_details_id = ?`,
+        [food_details_id]
+      );
+
+      // Retrieve beverages for this food
+      const [beverages] = await db.query(
+        `SELECT
+          bff.id AS beverage_food_id,
+          bff.beverage_id,
+          bff.isPaid,
+          br.name AS beverage_name,
+          br.image AS beverage_image,
+          br.cal AS beverage_cal,
+          br.price AS beverage_price
+        FROM beverage_for_food bff
+        LEFT JOIN beverage br ON bff.beverage_id = br.id
+        WHERE bff.food_details_id = ?`,
+        [food_details_id]
+      );
+
+      // Attach related data to the main food detail object
+      foodDetail.dips = dips;
+      foodDetail.sides = sides;
+      foodDetail.drinks = drinks;
+      foodDetail.beverages = beverages;
+    }
+
+    // Send success response with all food details
+    res.status(200).send({
+      success: true,
+      message: "Food details retrieved successfully",
+      data: foodDetails,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "An error occurred while retrieving the Food Details",
+      error: error.message,
+    });
+  }
+};
+
 // get all FoodMenu
 exports.getAllFoodMenu = async (req, res) => {
   try {
