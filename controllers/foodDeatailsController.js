@@ -16,10 +16,10 @@ exports.createFoodDetails = async (req, res) => {
       howManyChoiceDip,
       howManyChoiceDrink,
       howManyChoiceBeverage,
-      dips,
-      sides,
-      drinks,
-      beverages,
+      dips = [],
+      sides = [],
+      drinks = [],
+      beverages = [],
     } = req.body;
 
     if (
