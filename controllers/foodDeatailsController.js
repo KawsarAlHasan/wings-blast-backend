@@ -16,10 +16,10 @@ exports.createFoodDetails = async (req, res) => {
       howManyChoiceDip,
       howManyChoiceDrink,
       howManyChoiceBeverage,
-      dips = [],
-      sides = [],
-      drinks = [],
-      beverages = [],
+      dips,
+      sides,
+      drinks,
+      beverages,
     } = req.body;
 
     if (
@@ -75,49 +75,58 @@ exports.createFoodDetails = async (req, res) => {
     const food_details_id = result.insertId;
 
     // dip
-    const dipQuery =
-      "INSERT INTO dip_for_food (food_details_id, dip_id, isPaid) VALUES ?";
-    const dipValues = dips.map((dip) => [
-      food_details_id,
-      dip.dip_id,
-      dip.isPaid,
-    ]);
-    await db.query(dipQuery, [dipValues]);
+    if (dips) {
+      const dipQuery =
+        "INSERT INTO dip_for_food (food_details_id, dip_id, isPaid) VALUES ?";
+      const dipValues = dips.map((dip) => [
+        food_details_id,
+        dip.dip_id,
+        dip.isPaid,
+      ]);
+      await db.query(dipQuery, [dipValues]);
+    }
 
     // side
-    const sideQuery =
-      "INSERT INTO side_for_food (food_details_id, side_id, isPaid) VALUES ?";
-    const sideValues = sides.map((side) => [
-      food_details_id,
-      side.side_id,
-      side.isPaid,
-    ]);
-    await db.query(sideQuery, [sideValues]);
+    if (sides) {
+      const sideQuery =
+        "INSERT INTO side_for_food (food_details_id, side_id, isPaid) VALUES ?";
+      const sideValues = sides.map((side) => [
+        food_details_id,
+        side.side_id,
+        side.isPaid,
+      ]);
+      await db.query(sideQuery, [sideValues]);
+    }
 
     // drink
-    const drinkQuery =
-      "INSERT INTO drink_for_food (food_details_id, drink_id, isPaid) VALUES ?";
-    const drinkValues = drinks.map((drink) => [
-      food_details_id,
-      drink.drink_id,
-      drink.isPaid,
-    ]);
-    await db.query(drinkQuery, [drinkValues]);
+    if (drinks) {
+      const drinkQuery =
+        "INSERT INTO drink_for_food (food_details_id, drink_id, isPaid) VALUES ?";
+      const drinkValues = drinks.map((drink) => [
+        food_details_id,
+        drink.drink_id,
+        drink.isPaid,
+      ]);
+      await db.query(drinkQuery, [drinkValues]);
+    }
 
-    // side
-    const beverageQuery =
-      "INSERT INTO beverage_for_food (food_details_id, beverage_id, isPaid) VALUES ?";
-    const beverageValues = beverages.map((beverage) => [
-      food_details_id,
-      beverage.beverage_id,
-      beverage.isPaid,
-    ]);
-    await db.query(beverageQuery, [beverageValues]);
+    // beverages
+    if (beverages) {
+      const beverageQuery =
+        "INSERT INTO beverage_for_food (food_details_id, beverage_id, isPaid) VALUES ?";
+      const beverageValues = beverages.map((beverage) => [
+        food_details_id,
+        beverage.beverage_id,
+        beverage.isPaid,
+      ]);
+      await db.query(beverageQuery, [beverageValues]);
+    }
 
     // Send success response
     res.status(200).send({
       success: true,
       message: "Food Details inserted successfully",
+      foodDetailsId: food_details_id,
     });
   } catch (error) {
     res.status(500).send({
