@@ -5,7 +5,6 @@ exports.createFoodDetails = async (req, res) => {
   try {
     const {
       category_id,
-      food_menu_id,
       name,
       price,
       cal,
@@ -20,6 +19,10 @@ exports.createFoodDetails = async (req, res) => {
       sides,
       drinks,
       beverages,
+      food_menu_id,
+      food_menu_name,
+      food_menu_price,
+      food_menu_cal,
     } = req.body;
 
     if (
@@ -52,10 +55,9 @@ exports.createFoodDetails = async (req, res) => {
 
     // Insert Menu Food into the database
     const [result] = await db.query(
-      "INSERT INTO food_details (category_id, food_menu_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, howManyChoiceSide, howManyChoiceDip, howManyChoiceDrink, howManyChoiceBeverage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, howManyChoiceSide, howManyChoiceDip, howManyChoiceDrink, howManyChoiceBeverage, food_menu_id, food_menu_name, food_menu_price, food_menu_cal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
-        food_menu_id,
         name,
         image,
         price,
@@ -67,6 +69,10 @@ exports.createFoodDetails = async (req, res) => {
         howManyChoiceDip || 0,
         howManyChoiceDrink || 0,
         howManyChoiceBeverage || 0,
+        food_menu_id,
+        food_menu_name || "",
+        food_menu_price || 0,
+        food_menu_cal || "",
       ]
     );
 

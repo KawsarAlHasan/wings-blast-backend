@@ -47,6 +47,21 @@ exports.createMenuFood = async (req, res) => {
   }
 };
 
+// Chicken Sandwich
+
+// Name: 6 pc Wing Combo
+// Description: 6 Boneless or Classic (Bone-In) wings with up to 2 flavors, regular fries or veggie sticks, 1 dip and a 20oz drink
+
+// Boneless
+// $13.09
+// 830 – 1820 cal Sodium warning icon
+// Classic (Bone-In)
+// $14.19
+// 860 – 1890 cal Sodium warning icon
+// Mix & Match
+// $14.19
+// 830 – 1890 cal Sodium warning icon
+
 // get all FoodMenu
 exports.getAllFoodMenu = async (req, res) => {
   try {
