@@ -47,40 +47,31 @@ exports.createMenuFood = async (req, res) => {
   }
 };
 
-// Chicken Sandwich
-
-// Name: 6 pc Wing Combo
-// Description: 6 Boneless or Classic (Bone-In) wings with up to 2 flavors, regular fries or veggie sticks, 1 dip and a 20oz drink
-
-// Boneless
-// $13.09
-// 830 – 1820 cal Sodium warning icon
-// Classic (Bone-In)
-// $14.19
-// 860 – 1890 cal Sodium warning icon
-// Mix & Match
-// $14.19
-// 830 – 1890 cal Sodium warning icon
-
 // get all FoodMenu
 exports.getAllFoodMenu = async (req, res) => {
   try {
-    const [data] = await db.query(
-      "SELECT * FROM food_menu ORDER BY sn_number ASC"
-    );
-    if (!data || data.length == 0) {
+    const [foodMenus] = await db.query(`SELECT * FROM food_menu`);
+    if (!foodMenus || foodMenus.length === 0) {
       return res.status(200).send({
         success: true,
         message: "No Food menu found",
-        result: data,
+        result: [],
       });
+    }
+
+    for (const menu of foodMenus) {
+      const [details] = await db.query(
+        `SELECT * FROM food_details WHERE food_menu_id = ?`,
+        [menu.id]
+      );
+      menu.details = details;
     }
 
     res.status(200).send({
       success: true,
-      message: "Get all Food menu",
-      totalFoodMenu: data.length,
-      data,
+      message: "Get all Food menu with details",
+      totalFoodMenu: foodMenus.length,
+      data: foodMenus,
     });
   } catch (error) {
     res.status(500).send({

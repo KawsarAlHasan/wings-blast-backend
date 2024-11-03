@@ -7,6 +7,7 @@ const {
   createFoodDetails,
   getAllFoodDetails,
   getSingleFoodDetails,
+  deleteFoodDetails,
 } = require("../controllers/foodDeatailsController");
 
 const router = express.Router();
@@ -25,6 +26,6 @@ router.get("/:id", getSingleFoodDetails);
 //   uploadImage.single("image"),
 //   updateflavor
 // );
-// router.delete("/delete/:id", verifyAdmin, deleteflavor);
+router.delete("/delete/:id", verifyAdmin, deleteFoodDetails);
 
 module.exports = router;

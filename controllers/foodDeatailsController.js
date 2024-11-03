@@ -419,33 +419,36 @@ exports.updateFoodMenu = async (req, res) => {
   }
 };
 
-// delete FoodMenu
-exports.deleteFoodMenu = async (req, res) => {
+// delete Food Details
+exports.deleteFoodDetails = async (req, res) => {
   try {
     const id = req.params.id;
 
-    if (!id) {
-      return res.status(400).send({
-        success: false,
-        message: "foodMenu ID is required",
+    const [foodDetails] = await db.query(
+      "SELECT * FROM food_details WHERE id =?",
+      [id]
+    );
+
+    if (foodDetails.length === 0) {
+      return res.status(404).send({
+        success: true,
+        message: "No food details found",
       });
     }
 
-    // Check if the foodMenu exists in the database
-    const [foodMenu] = await db.query(`SELECT * FROM food_menu WHERE id = ?`, [
+    await db.query(`DELETE FROM dip_for_food WHERE food_details_id = ?`, [id]);
+    await db.query(`DELETE FROM side_for_food WHERE food_details_id = ?`, [id]);
+    await db.query(`DELETE FROM drink_for_food WHERE food_details_id = ?`, [
+      id,
+    ]);
+    await db.query(`DELETE FROM beverage_for_food WHERE food_details_id = ?`, [
       id,
     ]);
 
-    // If foodMenu not found, return 404
-    if (!foodMenu || foodMenu.length === 0) {
-      return res.status(404).send({
-        success: false,
-        message: "food_menu not found",
-      });
-    }
-
     // Proceed to delete the food_menu
-    const [result] = await db.query(`DELETE FROM food_menu WHERE id = ?`, [id]);
+    const [result] = await db.query(`DELETE FROM food_details WHERE id = ?`, [
+      id,
+    ]);
 
     // Check if deletion was successful
     if (result.affectedRows === 0) {
