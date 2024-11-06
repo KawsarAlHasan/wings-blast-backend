@@ -64,7 +64,7 @@ exports.getAllFoodMenu = async (req, res) => {
         `SELECT * FROM food_details WHERE food_menu_id = ?`,
         [menu.id]
       );
-      menu.details = details;
+      menu.food_details = details;
     }
 
     res.status(200).send({
