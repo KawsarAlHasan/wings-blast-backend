@@ -110,7 +110,7 @@ exports.getSingleFlavor = async (req, res) => {
     );
 
     if (!data || data.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "flavor not found",
       });
@@ -152,7 +152,7 @@ exports.updateflavor = async (req, res) => {
     ]);
 
     if (!flavorPreData || flavorPreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "flavor not found",
       });
@@ -184,7 +184,7 @@ exports.updateflavor = async (req, res) => {
 
     // Check if the Flavor was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Flavor not found or no changes made",
       });
@@ -214,7 +214,7 @@ exports.deleteflavor = async (req, res) => {
 
     // If flavor not found, return 404
     if (!flavor || flavor.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "flavor not found",
       });

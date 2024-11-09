@@ -72,7 +72,7 @@ exports.getSingleDrink = async (req, res) => {
     const [data] = await db.query("SELECT * FROM drink WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "drink not found",
       });
@@ -104,7 +104,7 @@ exports.updateDrink = async (req, res) => {
     ]);
 
     if (!drinkPreData || drinkPreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "drink not found",
       });
@@ -130,7 +130,7 @@ exports.updateDrink = async (req, res) => {
 
     // Check if the drink was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "drink not found or no changes made",
       });
@@ -160,7 +160,7 @@ exports.deleteDrink = async (req, res) => {
 
     // If drink not found, return 404
     if (!drink || drink.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "drink not found",
       });

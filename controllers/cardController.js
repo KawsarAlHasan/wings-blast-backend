@@ -92,7 +92,7 @@ exports.addCard = async (req, res) => {
 // get My Card
 exports.getMyCard = async (req, res) => {
   try {
-    const { user_id, guest_user_id } = req.body;
+    const { user_id, guest_user_id } = req.query;
 
     if (!user_id && !guest_user_id) {
       return res.status(400).send({
@@ -131,10 +131,22 @@ exports.getMyCard = async (req, res) => {
       );
 
       if (cardForUser.length === 0) {
-        return res.status(404).send({
+        return res.status(201).send({
           success: false,
           message: "No Product found in cart",
         });
+      }
+
+      for (const cdForUsr of cardForUser) {
+        const card_id = cdForUsr.id;
+
+        // Retrieve flavors for this food
+        const [flavors] = await db.query(
+          `SELECT * FROM flavers_for_card WHERE card_id = ?`,
+          [card_id]
+        );
+
+        cdForUsr.flavors = flavors;
       }
 
       res.status(200).send({
@@ -149,18 +161,23 @@ exports.getMyCard = async (req, res) => {
         fd.name AS food_name,
         fd.price AS food_price,
         fd.image AS food_image,
+        fd.description AS food_description,
         dp.name AS dip_name,
         dp.price AS dip_price,
         dp.image AS dip_image,
+        dp.isPaid AS dip_isPaid,
         sd.name AS side_name,
         sd.price AS side_price,
         sd.image AS side_image,
+        sd.isPaid AS side_isPaid,
         drk.name AS drink_name,
         drk.price AS drink_price,
         drk.image AS drink_image,
+        drk.isPaid AS drink_isPaid,
         bvr.name AS bakery_name,
         bvr.price AS bakery_price,
-        bvr.image AS bakery_image
+        bvr.image AS bakery_image,
+        bvr.isPaid AS bakery_isPaid
       FROM card crd
       LEFT JOIN food_details fd ON crd.food_details_id = fd.id
       LEFT JOIN dip dp ON crd.dip_id = dp.id
@@ -172,7 +189,7 @@ exports.getMyCard = async (req, res) => {
       );
 
       if (cardForGuest.length === 0) {
-        return res.status(404).send({
+        return res.status(201).send({
           success: false,
           message: "No Product found in cart",
         });
@@ -196,7 +213,7 @@ exports.getMyCard = async (req, res) => {
 // delete All Food from cart
 exports.deleteAllFoodFromCart = async (req, res) => {
   try {
-    const { user_id, guest_user_id } = req.body;
+    const { user_id, guest_user_id } = req.query;
 
     if (!user_id && !guest_user_id) {
       return res.status(400).send({
@@ -210,7 +227,7 @@ exports.deleteAllFoodFromCart = async (req, res) => {
         user_id,
       ]);
       if (!data || data.length === 0) {
-        return res.status(404).send({
+        return res.status(201).send({
           success: false,
           message: "No Product found from cart",
         });
@@ -226,7 +243,7 @@ exports.deleteAllFoodFromCart = async (req, res) => {
         [guest_user_id]
       );
       if (!data || data.length === 0) {
-        return res.status(404).send({
+        return res.status(201).send({
           success: false,
           message: "No Product found from cart",
         });
@@ -253,7 +270,7 @@ exports.deleteSingleFoodFromCart = async (req, res) => {
 
     const [data] = await db.query(`SELECT * FROM card WHERE id=? `, [id]);
     if (!data || data.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "No Food found from card",
       });

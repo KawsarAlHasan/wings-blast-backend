@@ -372,7 +372,7 @@ exports.updateFoodMenu = async (req, res) => {
     );
 
     if (!foodMenuPreData || foodMenuPreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Food Menu not found",
       });
@@ -399,7 +399,7 @@ exports.updateFoodMenu = async (req, res) => {
 
     // Check if the Food Menu was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Food Menu not found or no changes made",
       });
@@ -430,7 +430,7 @@ exports.deleteFoodDetails = async (req, res) => {
     );
 
     if (foodDetails.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: true,
         message: "No food details found",
       });

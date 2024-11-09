@@ -72,7 +72,7 @@ exports.getSingleSide = async (req, res) => {
     const [data] = await db.query("SELECT * FROM side WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Side not found",
       });
@@ -102,7 +102,7 @@ exports.updateSide = async (req, res) => {
     const [sidePreData] = await db.query(`SELECT * FROM side WHERE id=?`, [id]);
 
     if (!sidePreData || sidePreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "side not found",
       });
@@ -129,7 +129,7 @@ exports.updateSide = async (req, res) => {
 
     // Check if the Side was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Side not found or no changes made",
       });
@@ -159,7 +159,7 @@ exports.deleteSide = async (req, res) => {
 
     // If side not found, return 404
     if (!side || side.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "side not found",
       });

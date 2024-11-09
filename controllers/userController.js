@@ -197,7 +197,7 @@ exports.getSingleUser = async (req, res) => {
   try {
     const userId = req.params.id;
     if (!userId) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "User ID is required in params",
       });
@@ -205,7 +205,7 @@ exports.getSingleUser = async (req, res) => {
 
     const [data] = await db.query(`SELECT * FROM users WHERE id=? `, [userId]);
     if (!data || data.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "No user found",
       });
@@ -278,7 +278,7 @@ exports.userStatusUpdate = async (req, res) => {
   try {
     const userId = req.params.id;
     if (!userId) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "User ID is required in params",
       });
@@ -286,7 +286,7 @@ exports.userStatusUpdate = async (req, res) => {
 
     const { status } = req.body;
     if (!status) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "status is requied in body",
       });
@@ -294,7 +294,7 @@ exports.userStatusUpdate = async (req, res) => {
 
     const [data] = await db.query(`SELECT * FROM users WHERE id=? `, [userId]);
     if (!data || data.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "No user found",
       });
@@ -322,7 +322,7 @@ exports.userStatusUpdate = async (req, res) => {
 //     const { old_password, new_password } = req.body;
 
 //     if (!old_password || !new_password) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "Old Password and New Password is requied in body",
 //       });
@@ -369,14 +369,14 @@ exports.userStatusUpdate = async (req, res) => {
 //   try {
 //     const userID = req.params.id;
 //     if (!userID) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "User ID is reqiured in params",
 //       });
 //     }
 //     const [data] = await db.query(`SELECT * FROM users WHERE id=? `, [userID]);
 //     if (!data || data.length === 0) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "No user found",
 //       });

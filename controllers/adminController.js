@@ -158,7 +158,7 @@ exports.getMeAdmin = async (req, res) => {
 //     const { old_password, new_password } = req.body;
 
 //     if (!old_password || !new_password) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "Old Password and New Password is requied in body",
 //       });
@@ -205,7 +205,7 @@ exports.getMeAdmin = async (req, res) => {
 //   try {
 //     const adminID = req.params.id;
 //     if (!adminID) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "Admin role ID is required in params",
 //       });
@@ -213,7 +213,7 @@ exports.getMeAdmin = async (req, res) => {
 
 //     const { role_id } = req.body;
 //     if (!role_id) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "role_id is requied in body",
 //       });
@@ -230,7 +230,7 @@ exports.getMeAdmin = async (req, res) => {
 //       adminID,
 //     ]);
 //     if (!data || data.length === 0) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "No admins found",
 //       });
@@ -281,7 +281,7 @@ exports.getMeAdmin = async (req, res) => {
 //     );
 
 //     if (!rows || rows.length === 0) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "No admins found",
 //       });
@@ -346,7 +346,7 @@ exports.getMeAdmin = async (req, res) => {
 //   try {
 //     const adminId = req.params.id;
 //     if (!adminId) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "adminId is required in params",
 //       });
@@ -371,7 +371,7 @@ exports.getMeAdmin = async (req, res) => {
 //     );
 
 //     if (!rows || rows.length === 0) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "No admin found",
 //       });
@@ -414,7 +414,7 @@ exports.getMeAdmin = async (req, res) => {
 //   try {
 //     const adminID = req.params.id;
 //     if (!adminID) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "adminID is reqiured in params",
 //       });
@@ -424,7 +424,7 @@ exports.getMeAdmin = async (req, res) => {
 //       adminID,
 //     ]);
 //     if (!data || data.length === 0) {
-//       return res.status(404).send({
+//       return res.status(201).send({
 //         success: false,
 //         message: "No Admin found",
 //       });

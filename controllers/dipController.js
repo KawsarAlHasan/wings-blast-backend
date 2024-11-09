@@ -72,7 +72,7 @@ exports.getSingleDip = async (req, res) => {
     const [data] = await db.query("SELECT * FROM dip WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "dip not found",
       });
@@ -102,7 +102,7 @@ exports.updateDip = async (req, res) => {
     const [dipPreData] = await db.query(`SELECT * FROM dip WHERE id=?`, [id]);
 
     if (!dipPreData || dipPreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "dip not found",
       });
@@ -128,7 +128,7 @@ exports.updateDip = async (req, res) => {
 
     // Check if the Dip was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Dip not found or no changes made",
       });
@@ -158,7 +158,7 @@ exports.deleteDip = async (req, res) => {
 
     // If dip not found, return 404
     if (!dip || dip.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "dip not found",
       });

@@ -25,7 +25,7 @@ module.exports = async (req, res, next) => {
       ]);
 
       if (!data || data.length === 0) {
-        return res.status(404).send({
+        return res.status(201).send({
           success: false,
           message: "Admin not found. Please Login Again",
         });

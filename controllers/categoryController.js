@@ -89,7 +89,7 @@ exports.updateCategory = async (req, res) => {
     );
 
     if (!categoryPreData || categoryPreData.length == 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Category not found",
       });
@@ -114,7 +114,7 @@ exports.updateCategory = async (req, res) => {
 
     // Check if the category was updated successfully
     if (result.affectedRows === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Category not found or no changes made",
       });
@@ -153,7 +153,7 @@ exports.deleteCategory = async (req, res) => {
 
     // If category not found, return 404
     if (!category || category.length === 0) {
-      return res.status(404).send({
+      return res.status(201).send({
         success: false,
         message: "Category not found",
       });
