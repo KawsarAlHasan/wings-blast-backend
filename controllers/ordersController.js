@@ -5,6 +5,13 @@ exports.createOrders = async (req, res) => {
   try {
     const {
       user_id,
+      first_name,
+      last_name,
+      phone,
+      email,
+      delivery_type,
+      delevery_address,
+      building_suite_apt,
       sub_total,
       tax,
       total_price,
@@ -17,9 +24,16 @@ exports.createOrders = async (req, res) => {
 
     // Insert order into the 'orders' table
     const [orderResult] = await db.query(
-      "INSERT INTO orders (user_id, sub_total, tax, total_price, isLater, later_date, later_slot, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, total_price, isLater, later_date, later_slot, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         user_id,
+        first_name,
+        last_name,
+        phone,
+        email,
+        delivery_type,
+        delevery_address,
+        building_suite_apt,
         sub_total,
         tax,
         total_price,
@@ -68,6 +82,18 @@ exports.createOrders = async (req, res) => {
         }
       }
     }
+
+    // delete card Data
+    const [cardData] = await db.query(`SELECT * FROM card WHERE user_id = ?`, [
+      user_id,
+    ]);
+
+    for (const crdData of cardData) {
+      const card_id = crdData.id;
+      await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [card_id]);
+    }
+
+    await db.query(`DELETE FROM card WHERE user_id=?`, [user_id]);
 
     // Send success response
     res.status(200).send({
@@ -359,6 +385,53 @@ exports.getUserOrders = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error in getting user orders",
+      error: error.message,
+    });
+  }
+};
+
+// update order status
+exports.orderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    if (!orderId) {
+      return res.status(404).send({
+        success: false,
+        message: "order Id is required in params",
+      });
+    }
+
+    const { status } = req.body;
+    if (!status) {
+      return res.status(404).send({
+        success: false,
+        message: "status is requied in body",
+      });
+    }
+
+    const [data] = await db.query(`SELECT * FROM orders WHERE id=? `, [
+      orderId,
+    ]);
+    if (!data || data.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No Order found",
+      });
+    }
+
+    await db.query(`UPDATE orders SET status=?  WHERE id =?`, [
+      status,
+      orderId,
+    ]);
+
+    res.status(200).send({
+      success: true,
+      message: "Order status updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in Update order status ",
       error: error.message,
     });
   }

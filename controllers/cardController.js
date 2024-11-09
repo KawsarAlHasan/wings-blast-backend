@@ -142,7 +142,16 @@ exports.getMyCard = async (req, res) => {
 
         // Retrieve flavors for this food
         const [flavors] = await db.query(
-          `SELECT * FROM flavers_for_card WHERE card_id = ?`,
+          `SELECT
+            fcard.id,
+            fcard.quantity,
+            fvr.id AS flavor_id,
+            fvr.name AS flavor_name,
+            fvr.image AS flavor_image,
+            fvr.flavor_rating
+          FROM flavers_for_card fcard
+          LEFT JOIN flavor fvr ON fcard.flavor_id = fvr.id
+          WHERE fcard.card_id = ?`,
           [card_id]
         );
 
@@ -232,7 +241,7 @@ exports.deleteAllFoodFromCart = async (req, res) => {
           message: "No Product found from cart",
         });
       }
-      await db.query(`DELETE FROM cart WHERE user_id=?`, [user_id]);
+      await db.query(`DELETE FROM card WHERE user_id=?`, [user_id]);
       res.status(200).send({
         success: true,
         message: "Delete all product from cart",
@@ -275,6 +284,9 @@ exports.deleteSingleFoodFromCart = async (req, res) => {
         message: "No Food found from card",
       });
     }
+
+    await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [id]);
+
     await db.query(`DELETE FROM card WHERE id=?`, [id]);
     res.status(200).send({
       success: true,
