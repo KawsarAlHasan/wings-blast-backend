@@ -35,7 +35,7 @@ exports.createFlavor = async (req, res) => {
     const images = req.file;
     let image = "";
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Insert flavor into the database
@@ -161,7 +161,7 @@ exports.updateflavor = async (req, res) => {
     const images = req.file;
     let image = flavorPreData[0].image;
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query

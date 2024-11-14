@@ -16,7 +16,7 @@ exports.createMenuFood = async (req, res) => {
     const images = req.file;
     let image = "";
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Insert Menu Food into the database
@@ -104,7 +104,7 @@ exports.updateFoodMenu = async (req, res) => {
     const images = req.file;
     let image = foodMenuPreData[0].image;
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query

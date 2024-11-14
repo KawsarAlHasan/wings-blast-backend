@@ -11,40 +11,27 @@ exports.createFoodDetails = async (req, res) => {
       description,
       howManyFlavor,
       howManyChoiceFlavor,
-      howManyChoiceSide,
-      howManyChoiceDip,
-      howManyChoiceDrink,
-      howManyChoiceBeverage,
       dips,
       sides,
       drinks,
       beverages,
+      toppings,
+      sandCust,
       food_menu_id,
       food_menu_name,
-      food_menu_price,
-      food_menu_cal,
     } = req.body;
 
-    if (
-      !category_id ||
-      !food_menu_id ||
-      !name ||
-      !price ||
-      !cal ||
-      !howManyFlavor ||
-      !howManyChoiceFlavor
-    ) {
+    if (!category_id || !name || !price || !cal) {
       return res.status(400).send({
         success: false,
-        message:
-          "Please provide category_id, food_menu_id, name, price, cal, howManyFlavor & howManyChoiceFlavor field",
+        message: "Please provide category_id, name, price & cal field",
       });
     }
 
     const images = req.file;
     let image = "";
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Parse and validate dips, sides, drinks, beverages
@@ -52,10 +39,12 @@ exports.createFoodDetails = async (req, res) => {
     const parsedSides = sides ? JSON.parse(sides) : [];
     const parsedDrinks = drinks ? JSON.parse(drinks) : [];
     const parsedBeverages = beverages ? JSON.parse(beverages) : [];
+    const parsedToppings = toppings ? JSON.parse(toppings) : [];
+    const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
 
     // Insert Menu Food into the database
     const [result] = await db.query(
-      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, howManyChoiceSide, howManyChoiceDip, howManyChoiceDrink, howManyChoiceBeverage, food_menu_id, food_menu_name, food_menu_price, food_menu_cal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
         name,
@@ -63,16 +52,10 @@ exports.createFoodDetails = async (req, res) => {
         price,
         cal,
         description || "",
-        howManyFlavor,
-        howManyChoiceFlavor,
-        howManyChoiceSide || 0,
-        howManyChoiceDip || 0,
-        howManyChoiceDrink || 0,
-        howManyChoiceBeverage || 0,
-        food_menu_id,
+        howManyFlavor || 0,
+        howManyChoiceFlavor || 0,
+        food_menu_id || 0,
         food_menu_name || "",
-        food_menu_price || 0,
-        food_menu_cal || "",
       ]
     );
 
@@ -133,6 +116,30 @@ exports.createFoodDetails = async (req, res) => {
       await db.query(beverageQuery, [beverageValues]);
     }
 
+    // toppings
+    if (Array.isArray(parsedToppings) && parsedToppings.length > 0) {
+      const toppingQuery =
+        "INSERT INTO toppings_for_food (food_details_id, toppings_id, isPaid) VALUES ?";
+      const toppingValues = parsedToppings.map((toppings) => [
+        food_details_id,
+        toppings.toppings_id,
+        toppings.isPaid,
+      ]);
+      await db.query(toppingQuery, [toppingValues]);
+    }
+
+    // sandCust_for_food
+    if (Array.isArray(parsedSandCust) && parsedSandCust.length > 0) {
+      const sandCustQuery =
+        "INSERT INTO sandCust_for_food (food_details_id, sandCust_id, isPaid) VALUES ?";
+      const sandCustValues = parsedSandCust.map((sandCust) => [
+        food_details_id,
+        sandCust.sandCust_id,
+        sandCust.isPaid,
+      ]);
+      await db.query(sandCustQuery, [sandCustValues]);
+    }
+
     res.status(200).send({
       success: true,
       message: "Food Details inserted successfully",
@@ -150,8 +157,30 @@ exports.createFoodDetails = async (req, res) => {
 // Get All FoodDetails
 exports.getAllFoodDetails = async (req, res) => {
   try {
-    // Retrieve food details from the main table
-    const [foodDetails] = await db.query("SELECT * FROM food_details");
+    const { name, category_id, food_menu_id } = req.query;
+
+    // Start building the query with the main food details table
+    let query = "SELECT * FROM food_details WHERE 1=1";
+    const queryParams = [];
+
+    // Append conditions to the query based on the provided filters
+    if (name) {
+      query += " AND name LIKE ?";
+      queryParams.push(`%${name}%`); // For partial matching on name
+    }
+
+    if (category_id) {
+      query += " AND category_id = ?";
+      queryParams.push(category_id);
+    }
+
+    if (food_menu_id) {
+      query += " AND food_menu_id = ?";
+      queryParams.push(food_menu_id);
+    }
+
+    // Execute the query with parameters
+    const [foodDetails] = await db.query(query, queryParams);
 
     // If no data found, send an empty response
     if (foodDetails.length === 0) {
@@ -230,11 +259,45 @@ exports.getAllFoodDetails = async (req, res) => {
         [food_details_id]
       );
 
+      // Retrieve toppings for this food
+      const [toppings] = await db.query(
+        `SELECT
+          tff.id AS toppings_food_id,
+          tff.toppings_id,
+          tff.isPaid,
+          tp.name AS toppings_name,
+          tp.image AS toppings_image,
+          tp.cal AS toppings_cal,
+          tp.price AS toppings_price
+        FROM toppings_for_food tff
+        LEFT JOIN toppings tp ON tff.toppings_id = tp.id
+        WHERE tff.food_details_id = ?`,
+        [food_details_id]
+      );
+
+      // Retrieve sandCust for this food
+      const [sandCust] = await db.query(
+        `SELECT
+          sff.id AS sandCust_food_id,
+          sff.sandCust_id,
+          sff.isPaid,
+          sc.name AS sandCust_name,
+          sc.image AS sandCust_image,
+          sc.cal AS sandCust_cal,
+          sc.price AS sandCust_price
+        FROM sandCust_for_food sff
+        LEFT JOIN sandwich_customize sc ON sff.sandCust_id = sc.id
+        WHERE sff.food_details_id = ?`,
+        [food_details_id]
+      );
+
       // Attach related data to the main food detail object
       foodDetail.dips = dips;
       foodDetail.sides = sides;
       foodDetail.drinks = drinks;
       foodDetail.beverages = beverages;
+      foodDetail.toppings = toppings;
+      foodDetail.sandCust = sandCust;
     }
 
     // Send success response with all food details
@@ -336,12 +399,46 @@ exports.getSingleFoodDetails = async (req, res) => {
       [id]
     );
 
+    // Retrieve toppings for this food
+    const [toppings] = await db.query(
+      `SELECT
+          tff.id AS toppings_food_id,
+          tff.toppings_id,
+          tff.isPaid,
+          tp.name AS toppings_name,
+          tp.image AS toppings_image,
+          tp.cal AS toppings_cal,
+          tp.price AS toppings_price
+        FROM toppings_for_food tff
+        LEFT JOIN toppings tp ON tff.toppings_id = tp.id
+        WHERE tff.food_details_id = ?`,
+      [id]
+    );
+
+    // Retrieve sandCust for this food
+    const [sandCust] = await db.query(
+      `SELECT
+          sff.id AS sandCust_food_id,
+          sff.sandCust_id,
+          sff.isPaid,
+          sc.name AS sandCust_name,
+          sc.image AS sandCust_image,
+          sc.cal AS sandCust_cal,
+          sc.price AS sandCust_price
+        FROM sandCust_for_food sff
+        LEFT JOIN sandwich_customize sc ON sff.sandCust_id = sc.id
+        WHERE sff.food_details_id = ?`,
+      [id]
+    );
+
     const foodInfo = {
       ...foodDetails[0],
       dips: dips,
       sides: sides,
       drinks: drinks,
       beverages: beverages,
+      toppings: toppings,
+      sandCust: sandCust,
     };
 
     // Send success response with all food details
@@ -381,7 +478,7 @@ exports.updateFoodMenu = async (req, res) => {
     const images = req.file;
     let image = foodMenuPreData[0].image;
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query

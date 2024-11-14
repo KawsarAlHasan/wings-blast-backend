@@ -5,6 +5,7 @@ exports.createOrders = async (req, res) => {
   try {
     const {
       user_id,
+      guest_user_id,
       first_name,
       last_name,
       phone,
@@ -18,29 +19,35 @@ exports.createOrders = async (req, res) => {
       isLater,
       later_date,
       later_slot,
-      status,
       foods,
     } = req.body;
 
+    if (!user_id || !guest_user_id || !email || !phone || !total_price) {
+      return res.status(201).send({
+        success: false,
+        message:
+          "Plese provide user_id, guest_user_id, email, phone & total_price",
+      });
+    }
+
     // Insert order into the 'orders' table
     const [orderResult] = await db.query(
-      "INSERT INTO orders (user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, total_price, isLater, later_date, later_slot, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, total_price, isLater, later_date, later_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         user_id,
-        first_name,
-        last_name,
+        first_name || "",
+        last_name || "",
         phone,
         email,
-        delivery_type,
-        delevery_address,
-        building_suite_apt,
-        sub_total,
-        tax,
+        delivery_type || "",
+        delevery_address || "",
+        building_suite_apt || "",
+        sub_total || 0,
+        tax || 0,
         total_price,
-        isLater,
-        later_date,
-        later_slot,
-        status,
+        isLater || 0,
+        later_date || 0,
+        later_slot || "",
       ]
     );
 
@@ -84,16 +91,21 @@ exports.createOrders = async (req, res) => {
     }
 
     // delete card Data
-    const [cardData] = await db.query(`SELECT * FROM card WHERE user_id = ?`, [
-      user_id,
-    ]);
-
-    for (const crdData of cardData) {
-      const card_id = crdData.id;
+    const [cardData] = await db.query(
+      `SELECT * FROM card WHERE guest_user_id = ?`,
+      [guest_user_id]
+    );
+    for (const singleData of cardData) {
+      const card_id = singleData.id;
       await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [card_id]);
+      await db.query(`DELETE FROM toppings_for_card WHERE card_id=?`, [
+        card_id,
+      ]);
+      await db.query(`DELETE FROM sandCust_for_card WHERE card_id=?`, [
+        card_id,
+      ]);
     }
-
-    await db.query(`DELETE FROM card WHERE user_id=?`, [user_id]);
+    await db.query(`DELETE FROM cart WHERE guest_user_id=?`, [guest_user_id]);
 
     // Send success response
     res.status(200).send({
@@ -139,6 +151,22 @@ exports.getAllOrders = async (req, res) => {
               image: flavor.image,
               quantity: flavor.quantity,
               rating: flavor.rating,
+            })),
+          toppings: addons
+            .filter((addon) => addon.type === "toppings")
+            .map((toppings) => ({
+              name: toppings.name,
+              image: toppings.image,
+              price: toppings.price,
+              isPaid: toppings.isPaid,
+            })),
+          sandCust: addons
+            .filter((addon) => addon.type === "sandCust")
+            .map((sandCust) => ({
+              name: sandCust.name,
+              image: sandCust.image,
+              price: sandCust.price,
+              isPaid: sandCust.isPaid,
             })),
           dip: addons
             .filter((addon) => addon.type === "dip")

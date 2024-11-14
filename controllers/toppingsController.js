@@ -1,9 +1,9 @@
 const db = require("../config/db");
 
-// create Beverage
-exports.createBeverage = async (req, res) => {
+// create Toppings
+exports.createToppings = async (req, res) => {
   try {
-    const { name, cal, price } = req.body;
+    const { name, cal, price, size } = req.body;
 
     if (!name || !cal || !price) {
       return res.status(400).send({
@@ -18,177 +18,176 @@ exports.createBeverage = async (req, res) => {
       image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
-    // Insert Beverage into the database
+    // Insert Toppings into the database
     const [result] = await db.query(
-      "INSERT INTO beverage (name, image, cal, price) VALUES (?, ?, ?, ?)",
-      [name, image, cal, price]
+      "INSERT INTO toppings (name, image, cal, price, size) VALUES (?, ?, ?, ?, ?)",
+      [name, image, cal, price, size || ""]
     );
 
     // Check if the insertion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to insert Beverage, please try again",
+        message: "Failed to insert Toppings, please try again",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "Beverage inserted successfully",
+      message: "Toppings inserted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An error occurred while inserting the Beverage",
+      message: "An error occurred while inserting the Toppings",
       error: error.message,
     });
   }
 };
 
-// get all Beverage
-exports.getAllBeverage = async (req, res) => {
+// get all Toppings
+exports.getAllToppings = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM beverage");
+    const [data] = await db.query("SELECT * FROM toppings");
 
     res.status(200).send({
       success: true,
-      message: "Get all Beverage",
+      message: "Get all Toppings",
       data,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get All Beverage",
+      message: "Error in Get All Toppings",
       error: error.message,
     });
   }
 };
 
-// get singe Beverage
-exports.getSingleBeverage = async (req, res) => {
+// get singe Toppings
+exports.getSingleToppings = async (req, res) => {
   try {
     const id = req.params.id;
-    const [data] = await db.query("SELECT * FROM beverage WHERE id=? ", [id]);
+    const [data] = await db.query("SELECT * FROM toppings WHERE id=? ", [id]);
 
     if (!data || data.length == 0) {
       return res.status(201).send({
         success: false,
-        message: "Beverage not found",
+        message: "Toppings not found",
       });
     }
 
     res.status(200).send({
       success: true,
-      message: "Get Single Beverage",
+      message: "Get Single Toppings",
       data: data[0],
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get Single Beverage",
+      message: "Error in Get Single Toppings",
       error: error.message,
     });
   }
 };
 
-// update Beverage
-exports.updateBeverage = async (req, res) => {
+// update Toppings
+exports.updateToppings = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { name, cal, price } = req.body;
+    const { name, cal, price, size } = req.body;
 
-    const [beveragePreData] = await db.query(
-      `SELECT * FROM beverage WHERE id=?`,
+    const [toppingsPreData] = await db.query(
+      `SELECT * FROM toppings WHERE id=?`,
       [id]
     );
 
-    if (!beveragePreData || beveragePreData.length == 0) {
+    if (!toppingsPreData || toppingsPreData.length == 0) {
       return res.status(201).send({
         success: false,
-        message: "beverage not found",
+        message: "Toppings not found",
       });
     }
 
     const images = req.file;
-    let image = beveragePreData[0].image;
+    let image = toppingsPreData[0].image;
     if (images && images.path) {
       image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE beverage SET name=?, image=?, cal = ?, price = ? WHERE id = ?",
+      "UPDATE toppings SET name=?, image=?, cal = ?, price = ?, size=? WHERE id = ?",
       [
-        name || beveragePreData[0].name,
+        name || toppingsPreData[0].name,
         image,
-        cal || beveragePreData[0].cal,
-        price || beveragePreData[0].price,
+        cal || toppingsPreData[0].cal,
+        price || toppingsPreData[0].price,
+        size || toppingsPreData[0].size,
         id,
       ]
     );
 
-    // Check if the beverage was updated successfully
+    // Check if the Toppings was updated successfully
     if (result.affectedRows === 0) {
       return res.status(201).send({
         success: false,
-        message: "beverage not found or no changes made",
+        message: "Toppings not found or no changes made",
       });
     }
 
     // Success response
     res.status(200).send({
       success: true,
-      message: "beverage updated successfully",
+      message: "Toppings updated successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error updating beverage",
+      message: "Error updating Toppings",
       error: error.message,
     });
   }
 };
 
-// delete beverage
-exports.deletebeverage = async (req, res) => {
+// delete Toppings
+exports.deleteToppings = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // Check if the beverage exists in the database
-    const [beverage] = await db.query(`SELECT * FROM beverage WHERE id = ?`, [
-      id,
-    ]);
+    // Check if the Toppings exists in the database
+    const [data] = await db.query(`SELECT * FROM toppings WHERE id = ?`, [id]);
 
-    // If beverage not found, return 404
-    if (!beverage || beverage.length === 0) {
+    // If Toppings not found, return 404
+    if (!data || data.length === 0) {
       return res.status(201).send({
         success: false,
-        message: "beverage not found",
+        message: "Toppings not found",
       });
     }
 
-    // Proceed to delete the beverage
-    const [result] = await db.query(`DELETE FROM beverage WHERE id = ?`, [id]);
+    // Proceed to delete the Toppings
+    const [result] = await db.query(`DELETE FROM toppings WHERE id = ?`, [id]);
 
     // Check if deletion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to delete beverage",
+        message: "Failed to delete Toppings",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "beverage deleted successfully",
+      message: "Toppings deleted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error deleting beverage",
+      message: "Error deleting Toppings",
       error: error.message,
     });
   }

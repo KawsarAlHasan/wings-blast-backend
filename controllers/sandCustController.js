@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
-// create Side
-exports.createSide = async (req, res) => {
+// create Sandwich customize
+exports.createSandCust = async (req, res) => {
   try {
     const { name, cal, price, size } = req.body;
 
@@ -18,9 +18,9 @@ exports.createSide = async (req, res) => {
       image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
-    // Insert Side into the database
+    // Insert Sandwich customize into the database
     const [result] = await db.query(
-      "INSERT INTO side (name, image, cal, price, size) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO sandwich_customize (name, image, cal, price, size) VALUES (?, ?, ?, ?, ?)",
       [name, image, cal, price, size || ""]
     );
 
@@ -28,163 +28,175 @@ exports.createSide = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to insert Side, please try again",
+        message: "Failed to insert Sandwich customize, please try again",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "Side inserted successfully",
+      message: "Sandwich customize inserted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An error occurred while inserting the Side",
+      message: "An error occurred while inserting the Sandwich customize",
       error: error.message,
     });
   }
 };
 
-// get all Side
-exports.getAllSide = async (req, res) => {
+// get all Sandwich Customize
+exports.getAllSandCust = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM side");
+    const [data] = await db.query("SELECT * FROM sandwich_customize");
 
     res.status(200).send({
       success: true,
-      message: "Get all Side",
+      message: "Get all Sandwich Customize",
       data,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get All Side",
+      message: "Error in Get All Sandwich Customize",
       error: error.message,
     });
   }
 };
 
-// get singe Side
-exports.getSingleSide = async (req, res) => {
+// get singe Sandwich Customize
+exports.getSingleSandCust = async (req, res) => {
   try {
     const id = req.params.id;
-    const [data] = await db.query("SELECT * FROM side WHERE id=? ", [id]);
+    const [data] = await db.query(
+      "SELECT * FROM sandwich_customize WHERE id=? ",
+      [id]
+    );
 
     if (!data || data.length == 0) {
       return res.status(201).send({
         success: false,
-        message: "Side not found",
+        message: "Sandwich Customize not found",
       });
     }
 
     res.status(200).send({
       success: true,
-      message: "Get Single Side",
+      message: "Get Single Sandwich Customize",
       data: data[0],
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get Single Side",
+      message: "Error in Get Single Sandwich Customize",
       error: error.message,
     });
   }
 };
 
-// update Side
-exports.updateSide = async (req, res) => {
+// update Sandwich Customize
+exports.updateSandCust = async (req, res) => {
   try {
     const { id } = req.params;
 
     const { name, cal, price, size } = req.body;
 
-    const [sidePreData] = await db.query(`SELECT * FROM side WHERE id=?`, [id]);
+    const [sandCustPreData] = await db.query(
+      `SELECT * FROM sandwich_customize WHERE id=?`,
+      [id]
+    );
 
-    if (!sidePreData || sidePreData.length == 0) {
+    if (!sandCustPreData || sandCustPreData.length == 0) {
       return res.status(201).send({
         success: false,
-        message: "side not found",
+        message: "Sandwich Customize not found",
       });
     }
 
     const images = req.file;
-    let image = sidePreData[0].image;
+    let image = sandCustPreData[0].image;
     if (images && images.path) {
       image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE side SET name=?, image=?, cal = ?, price = ?, size=? WHERE id = ?",
+      "UPDATE sandwich_customize SET name=?, image=?, cal = ?, price = ?, size=? WHERE id = ?",
       [
-        name || sidePreData[0].name,
+        name || sandCustPreData[0].name,
         image,
-        cal || sidePreData[0].cal,
-        price || sidePreData[0].price,
-        size || sidePreData[0].size,
+        cal || sandCustPreData[0].cal,
+        price || sandCustPreData[0].price,
+        size || sandCustPreData[0].size,
         id,
       ]
     );
 
-    // Check if the Side was updated successfully
+    // Check if the Sandwich Customize was updated successfully
     if (result.affectedRows === 0) {
       return res.status(201).send({
         success: false,
-        message: "Side not found or no changes made",
+        message: "Sandwich Customize not found or no changes made",
       });
     }
 
     // Success response
     res.status(200).send({
       success: true,
-      message: "Side updated successfully",
+      message: "Sandwich Customize updated successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error updating Side",
+      message: "Error updating Sandwich Customize",
       error: error.message,
     });
   }
 };
 
-// delete Side
-exports.deleteSide = async (req, res) => {
+// delete Sandwich Customize
+exports.deleteSandCust = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // Check if the Side exists in the database
-    const [side] = await db.query(`SELECT * FROM side WHERE id = ?`, [id]);
+    // Check if the Sandwich Customize exists in the database
+    const [data] = await db.query(
+      `SELECT * FROM sandwich_customize WHERE id = ?`,
+      [id]
+    );
 
-    // If side not found, return 404
-    if (!side || side.length === 0) {
+    // If Sandwich Customize not found, return 404
+    if (!data || data.length === 0) {
       return res.status(201).send({
         success: false,
-        message: "side not found",
+        message: "Sandwich Customize not found",
       });
     }
 
-    // Proceed to delete the side
-    const [result] = await db.query(`DELETE FROM side WHERE id = ?`, [id]);
+    // Proceed to delete the Sandwich Customize
+    const [result] = await db.query(
+      `DELETE FROM sandwich_customize WHERE id = ?`,
+      [id]
+    );
 
     // Check if deletion was successful
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to delete side",
+        message: "Failed to delete Sandwich Customize",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "side deleted successfully",
+      message: "Sandwich Customize deleted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error deleting side",
+      message: "Error deleting Sandwich Customize",
       error: error.message,
     });
   }

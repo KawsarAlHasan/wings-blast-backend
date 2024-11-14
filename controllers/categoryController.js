@@ -16,7 +16,7 @@ exports.createCategory = async (req, res) => {
     const images = req.file;
     let category_image = "";
     if (images && images.path) {
-      category_image = `/public/images/${images.filename}`;
+      category_image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Insert category into the database
@@ -98,7 +98,7 @@ exports.updateCategory = async (req, res) => {
     const images = req.file;
     let category_image = categoryPreData[0].category_image;
     if (images && images.path) {
-      category_image = `/public/images/${images.filename}`;
+      category_image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query

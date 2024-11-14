@@ -15,7 +15,7 @@ exports.createDip = async (req, res) => {
     const images = req.file;
     let image = "";
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Insert dip into the database
@@ -111,7 +111,7 @@ exports.updateDip = async (req, res) => {
     const images = req.file;
     let image = dipPreData[0].image;
     if (images && images.path) {
-      image = `/public/images/${images.filename}`;
+      image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
 
     // Execute the update query
