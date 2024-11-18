@@ -1,8 +1,8 @@
 const express = require("express");
 const {
   addCard,
-  deleteSingleFoodFromCart,
-  deleteAllFoodFromCart,
+  deleteSingleFoodFromCard,
+  deleteAllFoodFromCard,
   getMyCard,
 } = require("../controllers/cardController");
 
@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post("/add", addCard);
 router.get("/", getMyCard);
-router.delete("/all", deleteAllFoodFromCart);
-router.delete("/delete/:id", deleteSingleFoodFromCart);
+router.delete("/all", deleteAllFoodFromCard);
+router.delete("/delete/:id", deleteSingleFoodFromCard);
 
 module.exports = router;

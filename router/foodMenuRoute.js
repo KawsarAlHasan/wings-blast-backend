@@ -8,6 +8,7 @@ const {
   getAllFoodMenu,
   updateFoodMenu,
   deleteFoodMenu,
+  getSingleFoodMenu,
 } = require("../controllers/foodMenuController");
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.post(
   createMenuFood
 );
 router.get("/all", getAllFoodMenu);
+router.get("/:id", getSingleFoodMenu);
 router.put("/update/:id", uploadImage.single("image"), updateFoodMenu);
 router.delete("/delete/:id", deleteFoodMenu);
 

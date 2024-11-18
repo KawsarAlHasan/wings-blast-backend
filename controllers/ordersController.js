@@ -53,6 +53,8 @@ exports.createOrders = async (req, res) => {
 
     const orderId = orderResult.insertId;
 
+    console.log("order id: ", orderId);
+
     // Insert each food item and its addons into the 'foods' and 'addons' tables
     for (const food of foods) {
       const { name, image, price, quantity, description, addons } = food;
@@ -105,7 +107,7 @@ exports.createOrders = async (req, res) => {
         card_id,
       ]);
     }
-    await db.query(`DELETE FROM cart WHERE guest_user_id=?`, [guest_user_id]);
+    await db.query(`DELETE FROM card WHERE guest_user_id=?`, [guest_user_id]);
 
     // Send success response
     res.status(200).send({
@@ -266,6 +268,22 @@ exports.getSingleOrder = async (req, res) => {
             image: flavor.image,
             quantity: flavor.quantity,
             rating: flavor.rating,
+          })),
+        toppings: addons
+          .filter((addon) => addon.type === "toppings")
+          .map((toppings) => ({
+            name: toppings.name,
+            image: toppings.image,
+            price: toppings.price,
+            isPaid: toppings.isPaid,
+          })),
+        sandCust: addons
+          .filter((addon) => addon.type === "sandCust")
+          .map((sandCust) => ({
+            name: sandCust.name,
+            image: sandCust.image,
+            price: sandCust.price,
+            isPaid: sandCust.isPaid,
           })),
         dip: addons
           .filter((addon) => addon.type === "dip")

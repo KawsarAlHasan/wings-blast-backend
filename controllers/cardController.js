@@ -155,7 +155,7 @@ exports.getMyCard = async (req, res) => {
     if (cardForGuest.length === 0) {
       return res.status(201).send({
         success: false,
-        message: "No Product found in cart",
+        message: "No Product found in card",
       });
     }
 
@@ -217,20 +217,20 @@ exports.getMyCard = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      message: "Foods retrieved from cart",
+      message: "Foods retrieved from card",
       data: cardForGuest,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error retrieving Foods from cart",
+      message: "Error retrieving Foods from card",
       error: error.message,
     });
   }
 };
 
-// delete All Food from cart
-exports.deleteAllFoodFromCart = async (req, res) => {
+// delete All Food from card
+exports.deleteAllFoodFromCard = async (req, res) => {
   try {
     const { guest_user_id } = req.query;
 
@@ -241,13 +241,13 @@ exports.deleteAllFoodFromCart = async (req, res) => {
       });
     }
 
-    const [data] = await db.query(`SELECT * FROM cart WHERE guest_user_id=? `, [
+    const [data] = await db.query(`SELECT * FROM card WHERE guest_user_id=? `, [
       guest_user_id,
     ]);
     if (!data || data.length === 0) {
       return res.status(201).send({
         success: false,
-        message: "No Product found from cart",
+        message: "No Product found from card",
       });
     }
 
@@ -262,22 +262,22 @@ exports.deleteAllFoodFromCart = async (req, res) => {
       ]);
     }
 
-    await db.query(`DELETE FROM cart WHERE guest_user_id=?`, [guest_user_id]);
+    await db.query(`DELETE FROM card WHERE guest_user_id=?`, [guest_user_id]);
     res.status(200).send({
       success: true,
-      message: "Delete all product from cart",
+      message: "Delete all product from card",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in delete all product from cart",
+      message: "Error in delete all product from card",
       error: error.message,
     });
   }
 };
 
-// delete Single Food from cart
-exports.deleteSingleFoodFromCart = async (req, res) => {
+// delete Single Food from card
+exports.deleteSingleFoodFromCard = async (req, res) => {
   try {
     const id = req.params.id;
 

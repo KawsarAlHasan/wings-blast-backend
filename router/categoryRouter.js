@@ -6,6 +6,7 @@ const {
   getAllCategory,
   updateCategory,
   deleteCategory,
+  getAllCategoryWithFood,
 } = require("../controllers/categoryController");
 const uploadImage = require("../middleware/imagesUploader");
 
@@ -18,6 +19,7 @@ router.post(
   createCategory
 );
 router.get("/all", getAllCategory);
+router.get("/allwithfood", getAllCategoryWithFood);
 router.put("/update/:id", uploadImage.single("category_image"), updateCategory);
 router.delete("/delete/:id", deleteCategory);
 

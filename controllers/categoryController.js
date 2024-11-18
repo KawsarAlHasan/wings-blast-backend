@@ -76,6 +76,57 @@ exports.getAllCategory = async (req, res) => {
   }
 };
 
+// get all category With Food
+exports.getAllCategoryWithFood = async (req, res) => {
+  try {
+    const [categoriesData] = await db.query(
+      "SELECT * FROM categories ORDER BY sn_number ASC"
+    );
+
+    if (!categoriesData || categoriesData.length === 0) {
+      return res.status(200).send({
+        success: true,
+        message: "No categories found",
+        totalCategories: 0,
+        data: [],
+      });
+    }
+
+    for (const category of categoriesData) {
+      const category_id = category.id;
+
+      const [foodMenus] = await db.query(
+        `SELECT * FROM food_menu WHERE category_id=?`,
+        [category_id]
+      );
+
+      category.food_menus = foodMenus || [];
+
+      for (const menu of category.food_menus) {
+        const [details] = await db.query(
+          `SELECT * FROM food_details WHERE food_menu_id = ?`,
+          [menu.id]
+        );
+
+        menu.food_details = details || [];
+      }
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Get all Categories",
+      totalCategories: categoriesData.length,
+      data: categoriesData,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in Get All Categories",
+      error: error.message,
+    });
+  }
+};
+
 // update category
 exports.updateCategory = async (req, res) => {
   try {
