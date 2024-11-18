@@ -26,11 +26,11 @@ router.put("/delevery-fee/update/:id", updateDeliveryFee);
 router.get("/tax", getTax);
 router.put("/tax/update/:id", updateTax);
 
-router.get("/delevery-fee", getTerms);
-router.put("/delevery-fee/update/:id", updateTerms);
+router.get("/terms", getTerms);
+router.put("/terms/update/:id", updateTerms);
 
-router.get("/tax", getPrivacyPolicy);
-router.put("/tax/update/:id", updatePrivacyPolicy);
+router.get("/privacy", getPrivacyPolicy);
+router.put("/privacy/update/:id", updatePrivacyPolicy);
 
 router.post("/banner/create", uploadImage.single("image"), createBanner);
 router.get("/banner", getAllBanner);
