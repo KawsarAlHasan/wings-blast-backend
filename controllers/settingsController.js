@@ -239,6 +239,62 @@ exports.updatePrivacyPolicy = async (req, res) => {
   }
 };
 
+// get about_us
+exports.getAboutUs = async (req, res) => {
+  try {
+    const [data] = await db.query("SELECT * FROM about_us");
+
+    res.status(200).send({
+      success: true,
+      message: "Get about_us",
+      data: data[0],
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in Get about_us",
+      error: error.message,
+    });
+  }
+};
+
+// update about_us
+exports.updateAboutUs = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { content } = req.body;
+
+    const [preData] = await db.query(`SELECT * FROM about_us WHERE id=?`, [id]);
+
+    // Execute the update query
+    const [result] = await db.query(
+      "UPDATE about_us SET content=? WHERE id = ?",
+      [content || preData[0].content, id]
+    );
+
+    // Check if the about_us was updated successfully
+    if (result.affectedRows === 0) {
+      return res.status(201).send({
+        success: false,
+        message: "about_us not found or no changes made",
+      });
+    }
+
+    // Success response
+    res.status(200).send({
+      success: true,
+      message: "about_us updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating Terms",
+      error: error.message,
+    });
+  }
+};
+
 // create Banner
 exports.createBanner = async (req, res) => {
   try {

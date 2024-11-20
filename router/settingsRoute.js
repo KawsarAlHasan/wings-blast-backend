@@ -16,6 +16,8 @@ const {
   getAllBanner,
   updateBanner,
   deleteBanner,
+  getAboutUs,
+  updateAboutUs,
 } = require("../controllers/settingsController");
 
 const router = express.Router();
@@ -31,6 +33,9 @@ router.put("/terms/update/:id", updateTerms);
 
 router.get("/privacy", getPrivacyPolicy);
 router.put("/privacy/update/:id", updatePrivacyPolicy);
+
+router.get("/about", getAboutUs);
+router.put("/about/update/:id", updateAboutUs);
 
 router.post("/banner/create", uploadImage.single("image"), createBanner);
 router.get("/banner", getAllBanner);
