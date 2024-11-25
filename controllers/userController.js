@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const { generateUserToken } = require("../config/userToken");
+const { sendMail } = require("../middleware/sandEmail");
 
 // sign up User
 exports.signUpUser = async (req, res) => {
@@ -49,6 +50,18 @@ exports.signUpUser = async (req, res) => {
 
     // Generate token after successful user creation
     const token = generateUserToken({ id: result.insertId });
+
+    const emailData = {
+      first_name,
+      last_name,
+      email,
+      password,
+      phone,
+    };
+    const emailResult = await sendMail(emailData);
+    if (!emailResult.messageId) {
+      res.status(500).send("Failed to send email");
+    }
 
     // Send success response with the token
     return res.status(200).json({

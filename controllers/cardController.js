@@ -232,7 +232,7 @@ exports.getMyCard = async (req, res) => {
 // delete All Food from card
 exports.deleteAllFoodFromCard = async (req, res) => {
   try {
-    const { guest_user_id } = req.query;
+    const guest_user_id = req.params.id;
 
     if (!guest_user_id) {
       return res.status(400).send({

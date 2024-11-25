@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post("/add", addCard);
 router.get("/", getMyCard);
-router.delete("/all", deleteAllFoodFromCard);
+router.delete("/all/:id", deleteAllFoodFromCard);
 router.delete("/delete/:id", deleteSingleFoodFromCard);
 
 module.exports = router;

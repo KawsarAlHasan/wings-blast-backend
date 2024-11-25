@@ -53,8 +53,6 @@ exports.createOrders = async (req, res) => {
 
     const orderId = orderResult.insertId;
 
-    console.log("order id: ", orderId);
-
     // Insert each food item and its addons into the 'foods' and 'addons' tables
     for (const food of foods) {
       const { name, image, price, quantity, description, addons } = food;
@@ -66,13 +64,14 @@ exports.createOrders = async (req, res) => {
       );
 
       const foodId = foodResult.insertId;
-
       // Insert addons into the 'addons' table
       if (addons) {
         for (const type in addons) {
           const items = addons[type];
           for (const item of items) {
             const { name, image, price, quantity, rating, isPaid } = item;
+
+            if (!name) continue;
 
             await db.query(
               "INSERT INTO addons (food_id, type, name, image, price, quantity, rating, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -127,7 +126,7 @@ exports.createOrders = async (req, res) => {
 exports.getAllOrders = async (req, res) => {
   try {
     // Get all orders from the orders table
-    const [orders] = await db.query("SELECT * FROM orders");
+    const [orders] = await db.query("SELECT * FROM orders ORDER BY id DESC");
 
     for (const order of orders) {
       // Get all foods related to the current order
@@ -338,15 +337,17 @@ exports.getSingleOrder = async (req, res) => {
   }
 };
 
+// get user order
 exports.getUserOrders = async (req, res) => {
   try {
     // Get user_id from request parameters
     const { user_id } = req.params;
 
     // Fetch all orders for the specific user from the orders table
-    const [orders] = await db.query("SELECT * FROM orders WHERE user_id = ?", [
-      user_id,
-    ]);
+    const [orders] = await db.query(
+      "SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC",
+      [user_id]
+    );
 
     // If no orders found, return a message
     if (orders.length === 0) {

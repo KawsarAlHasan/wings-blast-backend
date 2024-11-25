@@ -38,7 +38,7 @@ app.use("/api/v1/guest-user", require("./router/guesUserRoute"));
 app.use("/api/v1/card", require("./router/cardRoute"));
 app.use("/api/v1/orders", require("./router/ordersRoute"));
 app.use("/api/v1/settings", require("./router/settingsRoute"));
-app.use("/api/v1/payment", require("./router/paypalRoute"));
+app.use("/api/v1/coupons", require("./router/couponsRoute"));
 
 const port = process.env.PORT || 8000;
 
