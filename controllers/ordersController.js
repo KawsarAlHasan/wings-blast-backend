@@ -15,12 +15,19 @@ exports.createOrders = async (req, res) => {
       building_suite_apt,
       sub_total,
       tax,
+      fees,
+      delivery_fee,
+      tips,
+      coupon_discount,
       total_price,
       isLater,
       later_date,
       later_slot,
       foods,
     } = req.body;
+
+    const laterDate = new Date(later_date);
+    const newDate = new Date();
 
     if (!user_id || !guest_user_id || !email || !phone || !total_price) {
       return res.status(201).send({
@@ -32,7 +39,7 @@ exports.createOrders = async (req, res) => {
 
     // Insert order into the 'orders' table
     const [orderResult] = await db.query(
-      "INSERT INTO orders (user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, total_price, isLater, later_date, later_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, fees, delivery_fee, tips, coupon_discount, total_price, isLater, later_date, later_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         user_id,
         first_name || "",
@@ -44,9 +51,13 @@ exports.createOrders = async (req, res) => {
         building_suite_apt || "",
         sub_total || 0,
         tax || 0,
+        fees || 0,
+        delivery_fee || 0,
+        tips || 0,
+        coupon_discount || 0,
         total_price,
         isLater || 0,
-        later_date || 0,
+        laterDate || newDate,
         later_slot || "",
       ]
     );
