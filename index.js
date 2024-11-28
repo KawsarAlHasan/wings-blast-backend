@@ -4,9 +4,21 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mySqlPool = require("./config/db");
 const path = require("path");
-const app = express();
 dotenv.config();
 
+const app = express();
+
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+// Middleware
 const globalCorsOptions = {
   origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -14,16 +26,16 @@ const globalCorsOptions = {
 };
 app.use(cors(globalCorsOptions));
 app.options("*", cors(globalCorsOptions));
-app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Static Files
 app.use("/public", express.static(path.join(__dirname, "public")));
 
+// Routes
 app.use("/api/v1/admin", require("./router/adminRoute"));
 app.use("/api/v1/user", require("./router/userRoute"));
-// app.use("/api/v1/forgot", require("./routes/forgotPassword"));
 app.use("/api/v1/category", require("./router/categoryRouter"));
 app.use("/api/v1/flavor", require("./router/flavorRoute"));
 app.use("/api/v1/foodmenu", require("./router/foodMenuRoute"));
@@ -41,8 +53,7 @@ app.use("/api/v1/settings", require("./router/settingsRoute"));
 app.use("/api/v1/coupons", require("./router/couponsRoute"));
 app.use("/api/v1/fees", require("./router/feesRouter"));
 app.use("/api/v1/tips", require("./router/tipsRoute"));
-
-const port = process.env.PORT || 8000;
+app.use("/api/v1/notification", require("./router/notificationsRoute"));
 
 mySqlPool
   .query("SELECT 1")
@@ -53,17 +64,33 @@ mySqlPool
     console.log(error);
   });
 
-app.listen(port, () => {
-  console.log(`Wings Blast server in running on port ${port}`);
-});
-
+// Default Route
 app.get("/", (req, res) => {
   res.status(200).send("Wings Blast server is working");
 });
 
-// 404 Not Found middleware
+// 404 Not Found Middleware
 app.use("*", (req, res, next) => {
   res.status(404).json({
     error: "You have hit the wrong route",
   });
+});
+
+// Socket.io Events and Attach io to App
+io.on("connection", (socket) => {
+  // console.log("A user connected with socket id:", socket.id);
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    // console.log("User disconnected:", socket.id);
+  });
+});
+
+// Attach Socket.io instance to Express app
+app.set("socketio", io);
+
+// Server Start
+const port = process.env.PORT || 8000;
+server.listen(port, () => {
+  console.log(`Wings Blast server is running on port ${port}`);
 });

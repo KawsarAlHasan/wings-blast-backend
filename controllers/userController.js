@@ -51,17 +51,17 @@ exports.signUpUser = async (req, res) => {
     // Generate token after successful user creation
     const token = generateUserToken({ id: result.insertId });
 
-    const emailData = {
-      first_name,
-      last_name,
-      email,
-      password,
-      phone,
-    };
-    const emailResult = await sendMail(emailData);
-    if (!emailResult.messageId) {
-      res.status(500).send("Failed to send email");
-    }
+    // const emailData = {
+    //   first_name,
+    //   last_name,
+    //   email,
+    //   password,
+    //   phone,
+    // };
+    // const emailResult = await sendMail(emailData);
+    // if (!emailResult.messageId) {
+    //   res.status(500).send("Failed to send email");
+    // }
 
     // Send success response with the token
     return res.status(200).json({
@@ -243,6 +243,7 @@ exports.updateUser = async (req, res) => {
       first_name,
       last_name,
       phone,
+      birth_day,
       street_address,
       city,
       postal_or_zip_code,
@@ -252,12 +253,13 @@ exports.updateUser = async (req, res) => {
 
     // Update the user data in the database
     const [data] = await db.query(
-      `UPDATE users SET first_name=?, last_name=?, phone=?, street_address=?, city=?, postal_or_zip_code=?, state_or_region=?, country=? WHERE id = ?`,
+      `UPDATE users SET first_name=?, last_name=?, phone=?, street_address=?, birth_day=?, city=?, postal_or_zip_code=?, state_or_region=?, country=? WHERE id = ?`,
       [
         first_name || userPreData.first_name,
         last_name || userPreData.last_name,
         phone || userPreData.phone,
         street_address || userPreData.street_address,
+        birth_day || userPreData.birth_day,
         city || userPreData.city,
         postal_or_zip_code || userPreData.postal_or_zip_code,
         state_or_region || userPreData.state_or_region,

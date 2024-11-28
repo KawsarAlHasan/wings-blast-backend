@@ -2,200 +2,128 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 const punycode = require("punycode/");
 
-// let transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_ADD,
-//     pass: process.env.EMAIL_PASS,
-//   },
-// });
-
 // Hostinger SMTP credentials
 let transporter = nodemailer.createTransport({
   host: "smtp.hostinger.com",
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_ADD,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.NO_REPLY_EMAIL_ADD,
+    pass: process.env.NO_REPLY_EMAIL_PASS,
   },
 });
 
 async function sendMail(data) {
   try {
     const {
-      business_name,
-      business_address,
-      percentage,
-      email,
-      name,
-      password,
+      first_name,
+      last_name,
+      order_id,
       phone,
-      type,
-      empType,
-      empPosition,
-      salaryType,
-      salaryRate,
-      randomCode,
+      email,
+      delivery_type,
+      delevery_address,
+      sub_total,
+      tax,
+      fees,
+      delivery_fee,
+      tips,
+      coupon_discount,
+      total_price,
+      later_date,
+      later_slot,
+      foods,
     } = data;
 
     const emailAddress = punycode.toASCII(email);
 
-    let subject = "";
+    const subject = `Your Order Confirmation - Pending`;
 
-    if (type == "admin") {
-      subject = "ABS Admin Information";
-    } else if (type == "Partner") {
-      subject = "ABS Partner Information";
-    } else {
-      subject = "ABS Employee Information";
-    }
+    const htmlContent = ` <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              color: #333;
+              line-height: 1.6;
+            }
+            .order-summary {
+              border: 1px solid #ccc;
+              padding: 15px;
+              margin-top: 20px;
+              background-color: #f9f9f9;
+            }
+            .order-summary h2 {
+              color: #007BFF;
+            }
+            .order-item {
+              margin-top: 10px;
+            }
+            .order-item img {
+              width: 50px;
+              height: 50px;
+              object-fit: cover;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #777;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Hi ${first_name} ${last_name},</h1>
+          <p>Thank you for your order! We have received your order and it is currently pending.</p>
+          
+          <div class="order-summary">
+            <h2>Order Summary:</h2>
+            <p><strong>Order ID:</strong> ${order_id}</p>
+            <p><strong>Name:</strong> ${first_name} ${last_name}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Delivery Type:</strong> ${delivery_type}</p>
+            <p><strong>Delivery Address:</strong> ${delevery_address}</p>
 
-    let htmlContent = "";
+            ${foods
+              .map(
+                (food) => `<div class="order-item">
+                            <p><strong>Item:</strong> ${food.name}</p>
+                            <img src="${food.image}" alt="${food.name} Image">
+                            <p><strong>Description:</strong> ${food.description}</p>
+                            <p><strong>Price:</strong> $${food.price}</p>
+                            <p><strong>Quantity:</strong> ${food.quantity}</p>
+                          </div>`
+              )
+              .join("")}
 
-    if (type == "admin") {
-      htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Welcome to ${business_name}</title>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                  <td>
-                      <h2>Dear ${name},</h2>
-                      <p>Welcome to ${business_name}! We're excited to have you on board. Below is your account information:</p>
-                      <h3>Business Details:</h3>
-                      <ul>
-                          <li><strong>Business Name:</strong> ${business_name}</li>
-                          <li><strong>Business Address:</strong> ${business_address}</li>
-                      </ul>
-                      <h3>Your Account Details:</h3>
-                      <ul>
-                          <li><strong>Name:</strong> ${name}</li>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Phone:</strong> ${phone}</li>
-                      </ul>
-                      <p>Your login credentials for the dashboard are as follows:</p>
-                      <h3>Login Credentials:</h3>
-                      <ul>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Password:</strong> ${password}</li>
-                      </ul>
-                      <p>You will need to clock in when you start work. Here are the links to our clocking apps:</p>
-                      <ul>
-                          <li><strong>Google Play Store:</strong> <a href="https://play.google.com/store/apps/">Play Store link</a></li>
-                          <li><strong>Apple Store:</strong> <a href="https://www.apple.com/app-store/">Apple Store link</a></li>
-                      </ul>
-                      <p>If you have any questions or need further assistance, please don't hesitate to contact us at ${business_name}.</p>
-                      <p>Best regards,</p>
-                      <p>Abu,<br>
-                        Owner of ABS,<br>
-                        ABS.<br>
-                        +1938479403</p>
-                  </td>
-              </tr>
-          </table>
-      </body>
+            <p><strong>Subtotal:</strong> $${sub_total}</p>
+            ${fees > 0 ? `<p><strong>Tax & Fees:</strong> $${fees}</p>` : ""}
+            ${fees < 0 ? `<p><strong>Tax:</strong> $${tax}</p>` : ""}
+            ${
+              delivery_fee > 0
+                ? `<p><strong>Delivery Fee:</strong> $${delivery_fee}</p>`
+                : ""
+            }
+            ${tips > 0 ? `<p><strong>Tips:</strong> $${tips}</p>` : ""}
+            ${
+              coupon_discount > 0
+                ? `<p><strong>Coupon Discount:</strong> -$${coupon_discount}</p>`
+                : ""
+            }     
+            <p><strong>Total:</strong> $${total_price}</p>
+            <p><strong>Scheduled for:</strong> ${later_slot}</p>
+          </div>
+          
+          <p>If this order was not placed by you, please contact our customer support team immediately.</p>
+  
+          <div class="footer">
+            <p>&copy; 2024 WingsBlast. All Rights Reserved.</p>
+          </div>
+        </body>
       </html>`;
-    } else if (type == "Partner") {
-      htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Welcome Email</title>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                  <td>
-                      <h2>Dear ${name},</h2>
-                      <p>Welcome to becoming a partner of our company. Your information is given below:</p>
-                      <h3>Business Details:</h3>
-                      <ul>
-                          <li><strong>Business Name:</strong> ${business_name}</li>
-                          <li><strong>Business Address:</strong> ${business_address}</li>
-                          <li><strong>Partner Name:</strong> ${name}</li>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Phone:</strong> ${phone}</li>
-                          <li><strong>Role:</strong> ${type}</li>
-                          <li><strong>Partnership Percentage:</strong> ${percentage}%</li>
-                      </ul>
-                      <p>Now you can log in to your partner dashboard. Your login credentials are:</p>
-                      <h3>Login Credential:</h3>
-                      <ul>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Password:</strong> ${password}</li>
-                      </ul>
-                      <p>If you have any questions or need further assistance, please do not hesitate to contact the admin.</p>
-                      <p>Best regards,</p>
-                      <p>Abu,<br>
-                      Owner of ABS,<br>
-                      ABS.<br>
-                      +1938479403</p>
-                  </td>
-              </tr>
-          </table>
-      </body>
-      </html>`;
-    } else {
-      htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Welcome Email</title>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                  <td>
-                      <h2>Dear ${name},</h2>
-                      <p>Welcome to joining our company. Your information given below:</p>
-                      <h3>Details:</h3>
-                      <ul>
-                          <li><strong>Name:</strong> ${name}</li>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Phone:</strong> ${phone}</li>
-                          <li><strong>Role:</strong> ${type}</li>
-                          <li><strong>Employee Type:</strong> ${empType}</li>
-                          <li><strong>Employee Position:</strong> ${empPosition}</li>
-                          <li><strong>Salary:</strong> ${salaryType}</li>
-                          <li><strong>Salary Rate:</strong>$ ${salaryRate}</li>
-                      </ul>
-                      <p>Now you can login into your dashboard. Your login credentials are:</p>
-                      <h3>Login Credential:</h3>
-                      <ul>
-                          <li><strong>Email:</strong> ${email}</li>
-                          <li><strong>Password:</strong> ${password}</li>
-                          <li><strong>PIN Code:</strong> ${randomCode}</li>
-                      </ul>
-                      <p>You need to clock-in when you start work. Our clocking apps:</p>
-                      <ul>
-                          <li><strong>Google Play Store:</strong> <a href="https://play.google.com/store/apps/">Play Store link</a></li>
-                          <li><strong>Apple Store:</strong> <a href="https://www.apple.com/app-store/">Apple Store link</a></li>
-                      </ul>
-                      <p>If you have any questions or need further assistance, please do not hesitate to contact the admin.</p>
-                      <p>Best regards,</p>
-                      <p>Abu,<br>
-                      Owner of ABS,<br>
-                      ABS.<br>
-                      +1938479403</p>
-                  </td>
-              </tr>
-          </table>
-      </body>
-      </html>`;
-    }
 
     const mailOptions = {
-      from: process.env.EMAIL_ADD,
+      from: process.env.NO_REPLY_EMAIL_ADD,
       to: emailAddress,
       subject: subject,
       html: htmlContent,

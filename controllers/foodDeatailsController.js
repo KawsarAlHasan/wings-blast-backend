@@ -17,6 +17,7 @@ exports.createFoodDetails = async (req, res) => {
       beverages,
       toppings,
       sandCust,
+      platter_sides,
       food_menu_id,
       food_menu_name,
     } = req.body;
@@ -41,6 +42,7 @@ exports.createFoodDetails = async (req, res) => {
     const parsedBeverages = beverages ? JSON.parse(beverages) : [];
     const parsedToppings = toppings ? JSON.parse(toppings) : [];
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
+    const parsedPlatterSides = platter_sides ? JSON.parse(platter_sides) : [];
 
     // Insert Menu Food into the database
     const [result] = await db.query(
@@ -138,6 +140,18 @@ exports.createFoodDetails = async (req, res) => {
         sandCust.isPaid,
       ]);
       await db.query(sandCustQuery, [sandCustValues]);
+    }
+
+    // platerside_for_food
+    if (Array.isArray(parsedPlatterSides) && parsedPlatterSides.length > 0) {
+      const platterSideQuery =
+        "INSERT INTO platerside_for_food (food_details_id, platerSide_id, isPaid) VALUES ?";
+      const platterValues = parsedPlatterSides.map((platerSide) => [
+        food_details_id,
+        platerSide.platerSide_id,
+        platerSide.isPaid,
+      ]);
+      await db.query(platterSideQuery, [platterValues]);
     }
 
     res.status(200).send({
