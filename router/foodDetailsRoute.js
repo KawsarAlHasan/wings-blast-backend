@@ -8,6 +8,8 @@ const {
   getAllFoodDetails,
   getSingleFoodDetails,
   deleteFoodDetails,
+  updateFoodDetails,
+  foodDetailStatus,
 } = require("../controllers/foodDeatailsController");
 
 const router = express.Router();
@@ -20,12 +22,13 @@ router.post(
 );
 router.get("/all", getAllFoodDetails);
 router.get("/:id", getSingleFoodDetails);
-// router.put(
-//   "/update/:id",
-//   verifyAdmin,
-//   uploadImage.single("image"),
-//   updateflavor
-// );
+router.put(
+  "/update/:id",
+  verifyAdmin,
+  uploadImage.single("image"),
+  updateFoodDetails
+);
 router.delete("/delete/:id", verifyAdmin, deleteFoodDetails);
+router.put("/status/:id", foodDetailStatus);
 
 module.exports = router;

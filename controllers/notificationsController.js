@@ -38,7 +38,7 @@ exports.fetchUnreadNotifications = async (req, res) => {
 
     const query =
       "SELECT * FROM notifications WHERE receiver_id = ? AND type =? ORDER BY id DESC";
-    const [data] = await db.query(query, [id], "User");
+    const [data] = await db.query(query, [id, "User"]);
 
     if (!data || data.length == 0) {
       return res.status(200).send({

@@ -36,6 +36,7 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 // Routes
 app.use("/api/v1/admin", require("./router/adminRoute"));
 app.use("/api/v1/user", require("./router/userRoute"));
+app.use("/api/v1/forgot", require("./router/forgotPassword"));
 app.use("/api/v1/category", require("./router/categoryRouter"));
 app.use("/api/v1/flavor", require("./router/flavorRoute"));
 app.use("/api/v1/foodmenu", require("./router/foodMenuRoute"));
@@ -78,11 +79,11 @@ app.use("*", (req, res, next) => {
 
 // Socket.io Events and Attach io to App
 io.on("connection", (socket) => {
-  // console.log("A user connected with socket id:", socket.id);
+  console.log("A user connected with socket id:", socket.id);
 
   // Handle disconnection
   socket.on("disconnect", () => {
-    // console.log("User disconnected:", socket.id);
+    console.log("User disconnected:", socket.id);
   });
 });
 

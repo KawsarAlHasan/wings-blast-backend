@@ -7,9 +7,12 @@ const {
   userStatusUpdate,
   updateUser,
   getSingleUser,
+  updateProfileUser,
+  updateUserPassword,
 } = require("../controllers/userController");
 const verifyUser = require("../middleware/verifyUser");
 const verifyAdmin = require("../middleware/verifyAdmin");
+const uploadImage = require("../middleware/imagesUploader");
 
 const router = express.Router();
 
@@ -19,8 +22,14 @@ router.get("/me", verifyUser, getMeUser);
 router.get("/all", verifyAdmin, getAllUsers);
 router.get("/:id", verifyAdmin, getSingleUser);
 router.put("/update", verifyUser, updateUser);
+router.put(
+  "/update/profile",
+  uploadImage.single("profile_pic"),
+  verifyUser,
+  updateProfileUser
+);
 router.put("/status/:id", verifyAdmin, userStatusUpdate);
-// router.put("/password", verifyUser, updateUserPassword);
+router.put("/password", verifyUser, updateUserPassword);
 // router.delete("/delete/:id", verifyAdmin, deleteUser);
 
 module.exports = router;

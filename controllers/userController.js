@@ -288,6 +288,43 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+// update profile user
+exports.updateProfileUser = async (req, res) => {
+  try {
+    const userPreData = req.decodedUser;
+
+    const images = req.file;
+    let profile_pic = userPreData?.profile_pic;
+    if (images && images.path) {
+      profile_pic = `https://api.wingsblast.com/public/images/${images.filename}`;
+    }
+
+    // Update the user data in the database
+    const [data] = await db.query(
+      `UPDATE users SET profile_pic=? WHERE id = ?`,
+      [profile_pic, userPreData.id]
+    );
+
+    if (!data) {
+      return res.status(500).send({
+        success: false,
+        message: "Error in updating user",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in updating user",
+      error: error.message,
+    });
+  }
+};
+
 // user status
 exports.userStatusUpdate = async (req, res) => {
   try {
@@ -330,54 +367,54 @@ exports.userStatusUpdate = async (req, res) => {
   }
 };
 
-// // user password update
-// exports.updateUserPassword = async (req, res) => {
-//   try {
-//     const userID = req.decodedUser.id;
-//     const { old_password, new_password } = req.body;
+// user password update
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const userID = req.decodedUser.id;
+    const { old_password, new_password } = req.body;
 
-//     if (!old_password || !new_password) {
-//       return res.status(201).send({
-//         success: false,
-//         message: "Old Password and New Password is requied in body",
-//       });
-//     }
-//     const checkPassword = req.decodedUser?.password;
+    if (!old_password || !new_password) {
+      return res.status(201).send({
+        success: false,
+        message: "Old Password and New Password is requied in body",
+      });
+    }
+    const checkPassword = req.decodedUser?.password;
 
-//     const isMatch = await bcrypt.compare(old_password, checkPassword);
+    const isMatch = await bcrypt.compare(old_password, checkPassword);
 
-//     if (!isMatch) {
-//       return res.status(403).json({
-//         success: false,
-//         error: "Your Old Password is not correct",
-//       });
-//     }
+    if (!isMatch) {
+      return res.status(403).json({
+        success: false,
+        error: "Your Old Password is not correct",
+      });
+    }
 
-//     const hashedPassword = await bcrypt.hash(new_password, 10);
-//     const [result] = await db.query(`UPDATE users SET password=? WHERE id =?`, [
-//       hashedPassword,
-//       userID,
-//     ]);
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+    const [result] = await db.query(`UPDATE users SET password=? WHERE id =?`, [
+      hashedPassword,
+      userID,
+    ]);
 
-//     if (!result) {
-//       return res.status(403).json({
-//         success: false,
-//         error: "Something went wrong",
-//       });
-//     }
+    if (!result) {
+      return res.status(403).json({
+        success: false,
+        error: "Something went wrong",
+      });
+    }
 
-//     res.status(200).send({
-//       success: true,
-//       message: "User password updated successfully",
-//     });
-//   } catch (error) {
-//     res.status(500).send({
-//       success: false,
-//       message: "Error in password Update User",
-//       error: error.message,
-//     });
-//   }
-// };
+    res.status(200).send({
+      success: true,
+      message: "User password updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in password Update User",
+      error: error.message,
+    });
+  }
+};
 
 // // delete user
 // exports.deleteUser = async (req, res) => {
