@@ -50,6 +50,7 @@ app.use("/api/v1/dip", require("./router/dipRoute"));
 app.use("/api/v1/side", require("./router/sideRoute"));
 app.use("/api/v1/beverage", require("./router/beverageRoute"));
 app.use("/api/v1/drink", require("./router/drinkRoute"));
+app.use("/api/v1/drink-name", require("./router/drinkNameRoute"));
 app.use("/api/v1/sand-cust", require("./router/sandCustRoute"));
 app.use("/api/v1/toppings", require("./router/toppingsRoute"));
 app.use("/api/v1/guest-user", require("./router/guesUserRoute"));

@@ -11,6 +11,8 @@ exports.createFoodDetails = async (req, res) => {
       description,
       howManyFlavor,
       howManyChoiceFlavor,
+      howManyDips,
+      howManyChoiceDips,
       dips,
       sides,
       drinks,
@@ -46,16 +48,18 @@ exports.createFoodDetails = async (req, res) => {
 
     // Insert Food details into the database
     const [result] = await db.query(
-      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, howManyDips, howManyChoiceDips, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
         name,
         image,
         price,
-        cal,
+        cal || "",
         description || "",
         howManyFlavor || 0,
         howManyChoiceFlavor || 0,
+        howManyDips || 0,
+        howManyChoiceDips || 0,
         food_menu_id || 0,
         food_menu_name || "",
       ]
@@ -366,7 +370,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           d.price AS dip_price
         FROM dip_for_food dff
         LEFT JOIN dip d ON dff.dip_id = d.id
-        WHERE dff.food_details_id = ?`,
+        WHERE dff.food_details_id = ?
+        ORDER BY dff.isPaid ASC, d.price ASC`,
       [id]
     );
 
@@ -382,7 +387,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           s.price AS side_price
         FROM side_for_food sff
         LEFT JOIN side s ON sff.side_id = s.id
-        WHERE sff.food_details_id = ?`,
+        WHERE sff.food_details_id = ?
+        ORDER BY sff.isPaid ASC, s.price ASC`,
       [id]
     );
 
@@ -398,7 +404,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           dr.price AS drink_price
         FROM drink_for_food dff
         LEFT JOIN drink dr ON dff.drink_id = dr.id
-        WHERE dff.food_details_id = ?`,
+        WHERE dff.food_details_id = ?
+        ORDER BY dff.isPaid ASC, dr.price ASC`,
       [id]
     );
 
@@ -414,7 +421,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           br.price AS beverage_price
         FROM beverage_for_food bff
         LEFT JOIN beverage br ON bff.beverage_id = br.id
-        WHERE bff.food_details_id = ?`,
+        WHERE bff.food_details_id = ?
+        ORDER BY bff.isPaid ASC, br.price ASC`,
       [id]
     );
 
@@ -430,7 +438,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           tp.price AS toppings_price
         FROM toppings_for_food tff
         LEFT JOIN toppings tp ON tff.toppings_id = tp.id
-        WHERE tff.food_details_id = ?`,
+        WHERE tff.food_details_id = ?
+        ORDER BY tff.isPaid ASC, tp.price ASC`,
       [id]
     );
 
@@ -446,7 +455,8 @@ exports.getSingleFoodDetails = async (req, res) => {
           sc.price AS sandCust_price
         FROM sandCust_for_food sff
         LEFT JOIN sandwich_customize sc ON sff.sandCust_id = sc.id
-        WHERE sff.food_details_id = ?`,
+        WHERE sff.food_details_id = ?
+        ORDER BY sff.isPaid ASC, sc.price ASC`,
       [id]
     );
 
@@ -488,6 +498,8 @@ exports.updateFoodDetails = async (req, res) => {
       description,
       howManyFlavor,
       howManyChoiceFlavor,
+      howManyDips,
+      howManyChoiceDips,
       dips,
       sides,
       drinks,
@@ -533,7 +545,7 @@ exports.updateFoodDetails = async (req, res) => {
     const [result] = await db.query(
       `UPDATE food_details SET
         category_id = ?, name = ?, image = ?, price = ?, cal = ?, description = ?,
-        howManyFlavor = ?, howManyChoiceFlavor = ?,
+        howManyFlavor = ?, howManyChoiceFlavor = ?, howManyDips = ?, howManyChoiceDips = ?,
         food_menu_id = ?, food_menu_name = ?
       WHERE id = ?`,
       [
@@ -545,6 +557,8 @@ exports.updateFoodDetails = async (req, res) => {
         description || preDoodDetails[0].description,
         howManyFlavor || preDoodDetails[0].howManyFlavor,
         howManyChoiceFlavor || preDoodDetails[0].howManyChoiceFlavor,
+        howManyDips || preDoodDetails[0].howManyDips,
+        howManyChoiceDips || preDoodDetails[0].howManyChoiceDips,
         food_menu_id || preDoodDetails[0].food_menu_id,
         food_menu_name || preDoodDetails[0].food_menu_name,
         food_details_id,
