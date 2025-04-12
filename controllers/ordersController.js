@@ -122,20 +122,20 @@ exports.createOrders = async (req, res) => {
         for (const type in addons) {
           const items = addons[type];
           for (const item of items) {
-            const { name, price, quantity, rating, isPaid } = item;
+            const { name, price, quantity, isPaid, child_item_name } = item;
 
             if (!name) continue;
 
             await db.query(
-              "INSERT INTO addons (food_id, type, name, price, quantity, rating, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              "INSERT INTO addons (food_id, type, name, price, quantity, isPaid, child_item_name) VALUES (?, ?, ?, ?, ?, ?, ?)",
               [
                 foodId,
                 type,
                 name,
                 price || 0,
                 quantity || 1,
-                rating || null,
                 isPaid || false,
+                child_item_name || null,
               ]
             );
           }
@@ -392,19 +392,19 @@ exports.createOrder = async (req, res) => {
         for (const type in addons) {
           const items = addons[type];
           for (const item of items) {
-            const { name, price, quantity, rating, isPaid } = item;
+            const { name, price, quantity, child_item_name, isPaid } = item;
 
             if (!name) continue;
 
             await db.query(
-              "INSERT INTO addons (food_id, type, name, price, quantity, rating, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              "INSERT INTO addons (food_id, type, name, price, quantity, child_item_name, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?)",
               [
                 foodId,
                 type,
                 name,
                 price || 0,
                 quantity || 1,
-                rating || null,
+                child_item_name || null,
                 isPaid || false,
               ]
             );
