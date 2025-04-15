@@ -9,19 +9,13 @@ exports.createFoodDetails = async (req, res) => {
       price,
       cal,
       description,
-      howManyFlavor,
-      howManyChoiceFlavor,
-      howManyDips,
-      howManyChoiceDips,
-      dips,
-      sides,
-      drinks,
-      beverages,
-      toppings,
-      sandCust,
-      platter_sides,
       food_menu_id,
       food_menu_name,
+      addons,
+      drinks,
+      beverages,
+      sandCust,
+      ricePlatter,
     } = req.body;
 
     if (!category_id || !name || !price || !cal) {
@@ -38,17 +32,15 @@ exports.createFoodDetails = async (req, res) => {
     }
 
     // Parse and validate dips, sides, drinks, beverages
-    const parsedDips = dips ? JSON.parse(dips) : [];
-    const parsedSides = sides ? JSON.parse(sides) : [];
+    const parsedAddons = addons ? JSON.parse(addons) : [];
     const parsedDrinks = drinks ? JSON.parse(drinks) : [];
     const parsedBeverages = beverages ? JSON.parse(beverages) : [];
-    const parsedToppings = toppings ? JSON.parse(toppings) : [];
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
-    const parsedPlatterSides = platter_sides ? JSON.parse(platter_sides) : [];
+    const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
 
     // Insert Food details into the database
     const [result] = await db.query(
-      "INSERT INTO food_details (category_id, name, image, price, cal, description, howManyFlavor, howManyChoiceFlavor, howManyDips, howManyChoiceDips, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO food_details (category_id, name, image, price, cal, description, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
         name,
@@ -56,10 +48,6 @@ exports.createFoodDetails = async (req, res) => {
         price,
         cal || "",
         description || "",
-        howManyFlavor || 0,
-        howManyChoiceFlavor || 0,
-        howManyDips || 0,
-        howManyChoiceDips || 0,
         food_menu_id || 0,
         food_menu_name || "",
       ]
@@ -74,89 +62,85 @@ exports.createFoodDetails = async (req, res) => {
 
     const food_details_id = result.insertId;
 
-    // dip
-    if (Array.isArray(parsedDips) && parsedDips.length > 0) {
-      const dipQuery =
-        "INSERT INTO dip_for_food (food_details_id, dip_id, isPaid) VALUES ?";
-      const dipValues = parsedDips.map((dip) => [
+    // addons
+    if (Array.isArray(parsedAddons) && parsedAddons.length > 0) {
+      const foodAddonQuery =
+        "INSERT INTO food_details_addons (food_details_id, type, how_many_select, how_many_choice, sn_number, is_extra_addon, is_required) VALUES ?";
+      const foodDetailsValues = parsedAddons.map((fdv) => [
         food_details_id,
-        dip.dip_id,
-        dip.isPaid,
+        fdv.type,
+        fdv.how_many_select,
+        fdv.how_many_choice,
+        fdv.sn_number,
+        fdv.is_extra_addon,
+        fdv.is_required,
       ]);
-      await db.query(dipQuery, [dipValues]);
-    }
-
-    // side
-    if (Array.isArray(parsedSides) && parsedSides.length > 0) {
-      const sideQuery =
-        "INSERT INTO side_for_food (food_details_id, side_id, isPaid) VALUES ?";
-      const sideValues = parsedSides.map((side) => [
-        food_details_id,
-        side.side_id,
-        side.isPaid,
-      ]);
-      await db.query(sideQuery, [sideValues]);
+      await db.query(foodAddonQuery, [foodDetailsValues]);
     }
 
     // drink
     if (Array.isArray(parsedDrinks) && parsedDrinks.length > 0) {
-      const drinkQuery =
-        "INSERT INTO drink_for_food (food_details_id, drink_id, isPaid) VALUES ?";
-      const drinkValues = parsedDrinks.map((drink) => [
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedDrinks.map((fff) => [
         food_details_id,
-        drink.drink_id,
-        drink.isPaid,
+        "drink",
+        fff.drink_id,
+        fff.isPaid,
       ]);
-      await db.query(drinkQuery, [drinkValues]);
+      await db.query(query, [values]);
     }
 
-    // beverages
+    // beverage
     if (Array.isArray(parsedBeverages) && parsedBeverages.length > 0) {
-      const beverageQuery =
-        "INSERT INTO beverage_for_food (food_details_id, beverage_id, isPaid) VALUES ?";
-      const beverageValues = parsedBeverages.map((beverage) => [
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedBeverages.map((fff) => [
         food_details_id,
-        beverage.beverage_id,
-        beverage.isPaid,
+        "beverage",
+        fff.beverage_id,
+        fff.isPaid,
       ]);
-      await db.query(beverageQuery, [beverageValues]);
+      await db.query(query, [values]);
     }
 
-    // toppings
-    if (Array.isArray(parsedToppings) && parsedToppings.length > 0) {
-      const toppingQuery =
-        "INSERT INTO toppings_for_food (food_details_id, toppings_id, isPaid) VALUES ?";
-      const toppingValues = parsedToppings.map((toppings) => [
-        food_details_id,
-        toppings.toppings_id,
-        toppings.isPaid,
-      ]);
-      await db.query(toppingQuery, [toppingValues]);
-    }
-
-    // sandCust_for_food
+    // sandwich_customize
     if (Array.isArray(parsedSandCust) && parsedSandCust.length > 0) {
-      const sandCustQuery =
-        "INSERT INTO sandCust_for_food (food_details_id, sandCust_id, isPaid) VALUES ?";
-      const sandCustValues = parsedSandCust.map((sandCust) => [
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedSandCust.map((fff) => [
         food_details_id,
-        sandCust.sandCust_id,
-        sandCust.isPaid,
+        "sandwich_customize",
+        fff.sandCust_id,
+        fff.isPaid,
       ]);
-      await db.query(sandCustQuery, [sandCustValues]);
+      await db.query(query, [values]);
     }
 
-    // platerside_for_food
+    // platerside
     if (Array.isArray(parsedPlatterSides) && parsedPlatterSides.length > 0) {
-      const platterSideQuery =
-        "INSERT INTO platerside_for_food (food_details_id, platerSide_id, isPaid) VALUES ?";
-      const platterValues = parsedPlatterSides.map((platerSide) => [
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedPlatterSides.map((fff) => [
         food_details_id,
-        platerSide.platerSide_id,
-        platerSide.isPaid,
+        "side",
+        fff.side_id,
+        fff.isPaid,
       ]);
-      await db.query(platterSideQuery, [platterValues]);
+      await db.query(query, [values]);
     }
+
+    // // platerside_for_food
+    // if (Array.isArray(parsedPlatterSides) && parsedPlatterSides.length > 0) {
+    //   const platterSideQuery =
+    //     "INSERT INTO platerside_for_food (food_details_id, platerSide_id, isPaid) VALUES ?";
+    //   const platterValues = parsedPlatterSides.map((platerSide) => [
+    //     food_details_id,
+    //     platerSide.platerSide_id,
+    //     platerSide.isPaid,
+    //   ]);
+    //   await db.query(platterSideQuery, [platterValues]);
+    // }
 
     res.status(200).send({
       success: true,
@@ -358,116 +342,51 @@ exports.getSingleFoodDetails = async (req, res) => {
       });
     }
 
-    // Retrieve dips for this food
-    const [dips] = await db.query(
-      `SELECT
-          dff.id AS dip_food_id,
-          dff.dip_id,
-          dff.isPaid,
-          d.name AS dip_name,
-          d.image AS dip_image,
-          d.cal AS dip_cal,
-          d.price AS dip_price
-        FROM dip_for_food dff
-        LEFT JOIN dip d ON dff.dip_id = d.id
-        WHERE dff.food_details_id = ?
-        ORDER BY dff.isPaid ASC, d.price ASC`,
+    const [addons] = await db.query(
+      "SELECT * FROM food_details_addons WHERE food_details_id=?",
       [id]
     );
 
-    // Retrieve sides for this food
-    const [sides] = await db.query(
-      `SELECT
-          sff.id AS side_food_id,
-          sff.side_id,
-          sff.isPaid,
-          s.name AS side_name,
-          s.image AS side_image,
-          s.cal AS side_cal,
-          s.price AS side_price
-        FROM side_for_food sff
-        LEFT JOIN side s ON sff.side_id = s.id
-        WHERE sff.food_details_id = ?
-        ORDER BY sff.isPaid ASC, s.price ASC`,
+    const [featureForFood] = await db.query(
+      "SELECT * FROM feature_for_food WHERE food_details_id = ?",
       [id]
     );
 
-    // Retrieve drinks for this food
-    const [drinks] = await db.query(
-      `SELECT
-          dff.id AS drink_food_id,
-          dff.drink_id,
-          dff.isPaid,
-          dr.name AS drink_name,
-          dr.image AS drink_image,
-          dr.cal AS drink_cal,
-          dr.price AS drink_price
-        FROM drink_for_food dff
-        LEFT JOIN drink dr ON dff.drink_id = dr.id
-        WHERE dff.food_details_id = ?
-        ORDER BY dff.isPaid ASC, dr.price ASC`,
-      [id]
-    );
+    const groupedByType = [];
+    featureForFood.forEach((item) => {
+      if (!groupedByType[item.type]) {
+        groupedByType[item.type] = [];
+      }
+      groupedByType[item.type].push({ id: item.type_id, isPaid: item.isPaid });
+    });
 
-    // Retrieve beverages for this food
-    const [beverages] = await db.query(
-      `SELECT
-          bff.id AS beverage_food_id,
-          bff.beverage_id,
-          bff.isPaid,
-          br.name AS beverage_name,
-          br.image AS beverage_image,
-          br.cal AS beverage_cal,
-          br.price AS beverage_price
-        FROM beverage_for_food bff
-        LEFT JOIN beverage br ON bff.beverage_id = br.id
-        WHERE bff.food_details_id = ?
-        ORDER BY bff.isPaid ASC, br.price ASC`,
-      [id]
-    );
+    const finalResult = {};
 
-    // Retrieve toppings for this food
-    const [toppings] = await db.query(
-      `SELECT
-          tff.id AS toppings_food_id,
-          tff.toppings_id,
-          tff.isPaid,
-          tp.name AS toppings_name,
-          tp.image AS toppings_image,
-          tp.cal AS toppings_cal,
-          tp.price AS toppings_price
-        FROM toppings_for_food tff
-        LEFT JOIN toppings tp ON tff.toppings_id = tp.id
-        WHERE tff.food_details_id = ?
-        ORDER BY tff.isPaid ASC, tp.price ASC`,
-      [id]
-    );
+    for (const type in groupedByType) {
+      const idObjects = groupedByType[type];
 
-    // Retrieve sandCust for this food
-    const [sandCust] = await db.query(
-      `SELECT
-          sff.id AS sandCust_food_id,
-          sff.sandCust_id,
-          sff.isPaid,
-          sc.name AS sandCust_name,
-          sc.image AS sandCust_image,
-          sc.cal AS sandCust_cal,
-          sc.price AS sandCust_price
-        FROM sandCust_for_food sff
-        LEFT JOIN sandwich_customize sc ON sff.sandCust_id = sc.id
-        WHERE sff.food_details_id = ?
-        ORDER BY sff.isPaid ASC, sc.price ASC`,
-      [id]
-    );
+      const ids = idObjects.map((obj) => obj.id);
+      const placeholders = ids.map(() => "?").join(",");
+
+      const query = `SELECT * FROM \`${type}\` WHERE id IN (${placeholders})`;
+
+      const [rows] = await db.query(query, ids);
+
+      const rowsWithIsPaid = rows.map((row) => {
+        const matched = idObjects.find((obj) => obj.id === row.id);
+        return {
+          ...row,
+          isPaid: matched ? matched.isPaid : null,
+        };
+      });
+
+      finalResult[type] = rowsWithIsPaid;
+    }
 
     const foodInfo = {
       ...foodDetails[0],
-      dips: dips,
-      sides: sides,
-      drinks: drinks,
-      beverages: beverages,
-      toppings: toppings,
-      sandCust: sandCust,
+      addons,
+      ...finalResult,
     };
 
     // Send success response with all food details
@@ -713,22 +632,11 @@ exports.deleteFoodDetails = async (req, res) => {
       });
     }
 
-    await db.query(`DELETE FROM dip_for_food WHERE food_details_id = ?`, [id]);
-    await db.query(`DELETE FROM side_for_food WHERE food_details_id = ?`, [id]);
-    await db.query(`DELETE FROM drink_for_food WHERE food_details_id = ?`, [
-      id,
-    ]);
-    await db.query(`DELETE FROM beverage_for_food WHERE food_details_id = ?`, [
-      id,
-    ]);
-    await db.query(`DELETE FROM toppings_for_food WHERE food_details_id = ?`, [
-      id,
-    ]);
-    await db.query(`DELETE FROM sandCust_for_food WHERE food_details_id = ?`, [
+    await db.query(`DELETE FROM feature_for_food WHERE food_details_id = ?`, [
       id,
     ]);
     await db.query(
-      `DELETE FROM platerside_for_food WHERE food_details_id = ?`,
+      `DELETE FROM food_details_addons WHERE food_details_id = ?`,
       [id]
     );
 
