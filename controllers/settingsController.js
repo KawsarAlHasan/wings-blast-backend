@@ -124,172 +124,65 @@ exports.updateTax = async (req, res) => {
   }
 };
 
-// get terms
-exports.getTerms = async (req, res) => {
+// get footer_settings
+exports.getFooterSettings = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM terms");
+    const type = req.params.type;
+
+    const [data] = await db.query(
+      "SELECT * FROM footer_settings WHERE type =?",
+      [type]
+    );
 
     res.status(200).send({
       success: true,
-      message: "Get Terms",
+      message: `Get ${type}`,
       data: data[0],
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Get Terms",
+      message: "Internal Server Error",
       error: error.message,
     });
   }
 };
 
-// update terms
-exports.updateTerms = async (req, res) => {
+// update footer_settings
+exports.updateFooterSettings = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const { content } = req.body;
-
-    const [preData] = await db.query(`SELECT * FROM terms WHERE id=?`, [id]);
-
-    // Execute the update query
-    const [result] = await db.query("UPDATE terms SET content=? WHERE id = ?", [
-      content || preData[0].content,
-      id,
-    ]);
-
-    // Check if the Terms was updated successfully
-    if (result.affectedRows === 0) {
-      return res.status(201).send({
-        success: false,
-        message: "Terms not found or no changes made",
-      });
-    }
-
-    // Success response
-    res.status(200).send({
-      success: true,
-      message: "Terms updated successfully",
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error updating Terms",
-      error: error.message,
-    });
-  }
-};
-
-// get privacy_policy
-exports.getPrivacyPolicy = async (req, res) => {
-  try {
-    const [data] = await db.query("SELECT * FROM privacy_policy");
-
-    res.status(200).send({
-      success: true,
-      message: "Get privacy_policy",
-      data: data[0],
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error in Get privacy_policy",
-      error: error.message,
-    });
-  }
-};
-
-// update privacy_policy
-exports.updatePrivacyPolicy = async (req, res) => {
-  try {
-    const { id } = req.params;
+    const type = req.params.type;
 
     const { content } = req.body;
 
     const [preData] = await db.query(
-      `SELECT * FROM privacy_policy WHERE id=?`,
-      [id]
+      `SELECT * FROM footer_settings WHERE type=?`,
+      [type]
     );
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE privacy_policy SET content=? WHERE id = ?",
-      [content || preData[0].content, id]
+      "UPDATE footer_settings SET content=? WHERE type = ?",
+      [content || preData[0].content, type]
     );
 
-    // Check if the privacy_policy was updated successfully
+    // Check if the footer_settings was updated successfully
     if (result.affectedRows === 0) {
       return res.status(201).send({
         success: false,
-        message: "privacy_policy not found or no changes made",
+        message: `${type} not found or no changes made`,
       });
     }
 
     // Success response
     res.status(200).send({
       success: true,
-      message: "privacy_policy updated successfully",
+      message: `${type} updated successfully`,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error updating Terms",
-      error: error.message,
-    });
-  }
-};
-
-// get about_us
-exports.getAboutUs = async (req, res) => {
-  try {
-    const [data] = await db.query("SELECT * FROM about_us");
-
-    res.status(200).send({
-      success: true,
-      message: "Get about_us",
-      data: data[0],
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error in Get about_us",
-      error: error.message,
-    });
-  }
-};
-
-// update about_us
-exports.updateAboutUs = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { content } = req.body;
-
-    const [preData] = await db.query(`SELECT * FROM about_us WHERE id=?`, [id]);
-
-    // Execute the update query
-    const [result] = await db.query(
-      "UPDATE about_us SET content=? WHERE id = ?",
-      [content || preData[0].content, id]
-    );
-
-    // Check if the about_us was updated successfully
-    if (result.affectedRows === 0) {
-      return res.status(201).send({
-        success: false,
-        message: "about_us not found or no changes made",
-      });
-    }
-
-    // Success response
-    res.status(200).send({
-      success: true,
-      message: "about_us updated successfully",
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error updating Terms",
+      message: "Internal Server Error",
       error: error.message,
     });
   }
