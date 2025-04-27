@@ -65,7 +65,7 @@ exports.createCoupons = async (req, res) => {
 // get all coupons
 exports.getAllCoupons = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM coupons");
+    const [data] = await db.query("SELECT * FROM offers");
 
     if (!data || data.length == 0) {
       return res.status(201).send({
@@ -430,6 +430,101 @@ exports.getCouponsSendUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Internel Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.getMyDiscountsOffers = async (req, res) => {
+  try {
+    const { code, user_id, delivery_type } = req.body;
+
+    if (!code || !user_id) {
+      return res.status(400).send({
+        success: false,
+        message: "Please provide code and user_id field",
+      });
+    }
+
+    const [offers] = await db.query(`SELECT * FROM offers WHERE code = ?`, [
+      code,
+    ]);
+    const offer = offers[0];
+
+    if (!offer) {
+      return res.status(404).send({
+        success: false,
+        message: "Offer not found with this code",
+      });
+    }
+
+    const [userOffers] = await db.query(
+      `SELECT * FROM user_offers WHERE user_id = ? AND type_id = ?`,
+      [user_id, offer.id]
+    );
+
+    if (userOffers.length === 0) {
+      return res.status(400).send({
+        success: false,
+        message: "This not your offer",
+      });
+    }
+
+    // // check active or deactive
+    if (offer.is_active != 1) {
+      return res.status(400).send({
+        success: false,
+        message: "This offer is not active",
+      });
+    }
+
+    // // check is_duration_date
+    // const today = new Date();
+    // if (offer.is_duration_date == 1) {
+    //   const startDate = new Date(offer.start_date);
+    //   const endDate = new Date(offer.end_date);
+
+    //   if (today < startDate || today > endDate) {
+    //     return res.status(400).send({
+    //       success: false,
+    //       message: "This offer is not valid today",
+    //     });
+    //   }
+    // }
+
+    if (delivery_type === "carryout") {
+      const carry_out_used_time = userOffers[0]?.carry_out_used_time;
+      const carry_out_use_time = offer?.carry_out_use_time;
+
+      if (carry_out_used_time >= carry_out_use_time) {
+        return res.status(400).send({
+          success: false,
+          message: "You have already used this offer",
+        });
+      }
+    }
+
+    if (delivery_type === "delivery") {
+      const delivery_used_time = userOffers[0]?.delivery_used_time;
+      const delivery_use_time = offer?.delivery_use_time;
+
+      if (delivery_used_time >= delivery_use_time) {
+        return res.status(400).send({
+          success: false,
+          message: "You have already used this offer",
+        });
+      }
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Offer is valid",
+      data: offer,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
       error: error.message,
     });
   }
