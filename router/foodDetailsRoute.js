@@ -11,6 +11,8 @@ const {
   updateFoodDetails,
   foodDetailStatus,
   getAllFoodDetailsForUser,
+  getAllFoodDetailsForAdminPanel,
+  discountFoodDetails,
 } = require("../controllers/foodDeatailsController");
 
 const router = express.Router();
@@ -21,8 +23,10 @@ router.post(
   verifyAdmin,
   createFoodDetails
 );
+router.get("/admin-panel", getAllFoodDetailsForAdminPanel);
 router.get("/", getAllFoodDetailsForUser);
 router.get("/all", getAllFoodDetails);
+router.get("/discount", discountFoodDetails);
 router.get("/:id", getSingleFoodDetails);
 router.put(
   "/update/:id",

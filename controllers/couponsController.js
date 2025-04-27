@@ -1,48 +1,42 @@
 const db = require("../config/db");
 const { sendBulkEmails } = require("../middleware/sendBulkEmails");
+const { sendBulkPromotionEmails } = require("../middleware/sendBulkEmails");
+
+// `coupons`(`id`, `name`, `carry_out_use_time`, `delivery_use_time`, `discount_percentage`, `discount_amount`, `date`, `start_date`, `end_date`, `is_date`, `is_duration_date`, `is_discount_percentage`, `is_discount_amount`, `is_active`
 
 // create coupons
 exports.createCoupons = async (req, res) => {
   try {
     const {
       name,
-      image,
-      code,
-      discount_price,
+      carry_out_use_time,
+      delivery_use_time,
       discount_percentage,
+      discount_amount,
+      date,
+      start_date,
+      end_date,
+      is_date,
+      is_duration_date,
       is_discount_percentage,
-      expiration_date,
-      is_active,
+      is_discount_amount,
     } = req.body;
-    if (!code) {
-      return res.status(400).send({
-        success: false,
-        message: "Please provide code field",
-      });
-    }
 
-    const [checkData] = await db.query("SELECT * FROM coupons WHERE code=?", [
-      code,
-    ]);
-
-    if (checkData.length > 0) {
-      return res.status(400).send({
-        success: false,
-        message: "This Code already used",
-      });
-    }
-
-    // Insert coupons into the database
     const [result] = await db.query(
-      "INSERT INTO coupons (name, code, discount_price, discount_percentage, is_discount_percentage, expiration_date, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO coupons ( name, carry_out_use_time, delivery_use_time, discount_percentage, discount_amount, date, start_date, end_date, is_date, is_duration_date, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
-        name || "",
-        code,
-        discount_price || 0,
+        name,
+        carry_out_use_time || 0,
+        delivery_use_time || 0,
         discount_percentage || 0,
+        discount_amount || 0,
+        date || 0,
+        start_date || 0,
+        end_date || 0,
+        is_date || 0,
+        is_duration_date || 0,
         is_discount_percentage || 0,
-        expiration_date || null,
-        is_active || 1,
+        is_discount_amount || 0,
       ]
     );
 
@@ -72,6 +66,23 @@ exports.createCoupons = async (req, res) => {
 exports.getAllCoupons = async (req, res) => {
   try {
     const [data] = await db.query("SELECT * FROM coupons");
+
+    if (!data || data.length == 0) {
+      return res.status(201).send({
+        success: false,
+        message: "Promotion not found",
+      });
+    }
+
+    for (const singleData of data) {
+      const couponID = singleData.id;
+      const [used_time] = await db.query(
+        "SELECT SUM(used_time) AS total_used_time FROM user_coupons WHERE coupon_id =?",
+        [couponID]
+      );
+
+      singleData.used_time = used_time[0].total_used_time;
+    }
 
     res.status(200).send({
       success: true,
@@ -109,8 +120,10 @@ exports.getSingleCoupons = async (req, res) => {
     res.status(200).send({
       success: true,
       message: "Get Single coupons",
-      totalUsedTime: used_time[0].total_used_time,
-      data: data[0],
+      data: {
+        ...data[0],
+        used_time: used_time[0].total_used_time,
+      },
     });
   } catch (error) {
     res.status(500).send({
@@ -128,26 +141,19 @@ exports.updateCoupons = async (req, res) => {
 
     const {
       name,
-      image,
-      code,
-      discount_price,
+      carry_out_use_time,
+      delivery_use_time,
       discount_percentage,
+      discount_amount,
+      date,
+      start_date,
+      end_date,
+      is_date,
+      is_duration_date,
       is_discount_percentage,
-      expiration_date,
+      is_discount_amount,
       is_active,
     } = req.body;
-
-    const [checkData] = await db.query(
-      "SELECT * FROM coupons WHERE code=? AND id !=?",
-      [code, id]
-    );
-
-    if (checkData.length > 0) {
-      return res.status(400).send({
-        success: false,
-        message: "This Code already used",
-      });
-    }
 
     // Check if coupons exists
     const [existingCoupons] = await db.query(
@@ -164,15 +170,20 @@ exports.updateCoupons = async (req, res) => {
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE coupons SET name=?, code = ?, discount_price= ?, discount_percentage=?, is_discount_percentage=?, expiration_date=?, is_active=? WHERE id = ?",
+      "UPDATE coupons SET name=?, carry_out_use_time=?, delivery_use_time=?, discount_percentage=?, discount_amount=?, date=?, start_date=?, end_date=?, is_date=?, is_duration_date=?, is_discount_percentage=?, is_discount_amount=? WHERE id = ?",
       [
         name || existingCoupons[0].name,
-        code || existingCoupons[0].code,
-        discount_price || existingCoupons[0].discount_price,
+        carry_out_use_time || existingCoupons[0].carry_out_use_time,
+        delivery_use_time || existingCoupons[0].delivery_use_time,
         discount_percentage || existingCoupons[0].discount_percentage,
+        discount_amount || existingCoupons[0].discount_amount,
+        date || existingCoupons[0].date,
+        start_date || existingCoupons[0].start_date,
+        end_date || existingCoupons[0].end_date,
+        is_date || existingCoupons[0].is_date,
+        is_duration_date || existingCoupons[0].is_duration_date,
         is_discount_percentage || existingCoupons[0].is_discount_percentage,
-        expiration_date || existingCoupons[0].expiration_date,
-        is_active || existingCoupons[0].is_active,
+        is_discount_amount || existingCoupons[0].is_discount_amount,
         id,
       ]
     );
@@ -419,6 +430,106 @@ exports.getCouponsSendUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Internel Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// `coupons`(`id`, `name`, `carry_out_use_time`, `delivery_use_time`, `discount_percentage`, `discount_amount`, `date`, `start_date`, `end_date`, `is_date`, `is_duration_date`, `is_discount_percentage`, `is_discount_amount`, `is_active`)
+
+// `user_coupons`(`id`, `user_id`, `coupon_id`, `sent_time`, `used_time`, `carry_out_used_time`, `sent_at`, `used_at`)
+
+exports.getMyDiscountsOffer = async (req, res) => {
+  try {
+    const [data] = await db.query(`SELECT * FROM user_coupons`);
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.getMyDiscountsOffer = async (req, res) => {
+  const userId = req.params.userId; // ধরলাম userId URL থেকে আসতেছে
+  const currentDate = new Date(); // আজকের তারিখ
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT uc.*, c.*
+      FROM user_coupons uc
+      INNER JOIN coupons c ON uc.coupon_id = c.id
+      WHERE uc.user_id = ?
+        AND c.is_active = 1
+        AND (
+          (c.is_date = 1 AND ? BETWEEN c.start_date AND c.end_date)
+          OR c.is_date = 0
+        )
+      `,
+      [userId, currentDate]
+    );
+
+    // এখন ডাটার ভেতরে যেয়ে চেক করবো কোনটা carry_out, কোনটা delivery available
+    const coupons = rows.map((row) => {
+      return {
+        id: row.coupon_id,
+        name: row.name,
+        discount_percentage: row.discount_percentage,
+        discount_amount: row.discount_amount,
+        carry_out_available: row.carry_out_use_time > row.carry_out_used_time,
+        delivery_available: row.delivery_use_time > row.used_time,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        is_date_based: row.is_date,
+        is_active: row.is_active,
+      };
+    });
+
+    res.status(200).send({
+      success: true,
+      data: coupons,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.getMyDiscountsOffer = async (req, res) => {
+  const userId = req.params.userId; // ধরলাম তুমি URL থেকে userId পাঠাচ্ছো
+  const currentDate = new Date(); // আজকের তারিখ
+  try {
+    const [data] = await db.query(
+      `
+      SELECT uc.*, c.*
+      FROM user_coupons uc
+      INNER JOIN coupons c ON uc.coupon_id = c.id
+      WHERE uc.user_id = ?
+        AND c.is_active = 1
+        AND (
+          (c.is_date = 1 AND ? BETWEEN c.start_date AND c.end_date)
+          OR c.is_date = 0
+        )
+        AND (
+          (c.carry_out_use_time > uc.carry_out_used_time)
+          OR (c.delivery_use_time > uc.used_time)
+        )
+      `,
+      [userId, currentDate]
+    );
+
+    res.status(200).send({
+      success: true,
+      data: data,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
       error: error.message,
     });
   }

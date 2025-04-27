@@ -5,11 +5,15 @@ const { sendBulkPromotionEmails } = require("../middleware/sendBulkEmails");
 exports.createPromition = async (req, res) => {
   try {
     const {
-      name,
+      food_id,
+      type,
       code,
-      date,
+      name,
+      carry_out_use_time,
+      delivery_use_time,
       discount_percentage,
       discount_amount,
+      date,
       start_date,
       end_date,
       is_date,
@@ -18,24 +22,30 @@ exports.createPromition = async (req, res) => {
       is_discount_amount,
     } = req.body;
 
-    if (!name || !code) {
+    if (!name || !type || !code) {
       return res.status(400).send({
         success: false,
-        message: "Please provide name & code field",
+        message: "Please provide tpye, code & name field",
       });
     }
 
+    // `id`, `food_id`, `name`, `carry_out_use_time`, `delivery_use_time`, `discount_percentage`, `discount_amount`, `date`, `start_date`, `end_date`, `is_date`, `is_duration_date`, `is_discount_percentage`, `is_discount_amount`, `is_active`
+
     // Insert Promotion into the database
     const [result] = await db.query(
-      "INSERT INTO promotion ( name, code, date, discount_percentage, discount_amount, start_date, end_date, is_date, is_duration_date, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO offers (food_id, type, code, name, carry_out_use_time, delivery_use_time, discount_percentage, discount_amount, date, start_date, end_date, is_date, is_duration_date, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
-        name || "",
-        code || "",
-        date || "",
-        discount_percentage || "",
+        food_id || 0,
+        type,
+        code,
+        name,
+        carry_out_use_time || 0,
+        delivery_use_time || 0,
+        discount_percentage || 0,
         discount_amount || 0,
+        date || 0,
         start_date || 0,
-        end_date || "",
+        end_date || 0,
         is_date || 0,
         is_duration_date || 0,
         is_discount_percentage || 0,
@@ -47,19 +57,19 @@ exports.createPromition = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(500).send({
         success: false,
-        message: "Failed to insert Promotion, please try again",
+        message: "Failed to insert offers, please try again",
       });
     }
 
     // Send success response
     res.status(200).send({
       success: true,
-      message: "Promotion inserted successfully",
+      message: "offers inserted successfully",
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An error occurred while inserting the Promotion",
+      message: "An error occurred while inserting the offers",
       error: error.message,
     });
   }
@@ -68,7 +78,34 @@ exports.createPromition = async (req, res) => {
 // get all Promotion
 exports.getAllPromotion = async (req, res) => {
   try {
-    const [data] = await db.query("SELECT * FROM promotion");
+    const [data] = await db.query(
+      `SELECT 
+      prmtn.*,
+      fd.name AS food_details_name, 
+      fd.image AS food_details_image
+      FROM offers prmtn
+      LEFT JOIN food_details fd ON prmtn.food_id = fd.id
+      WHERE prmtn.type = ?
+      `,
+      ["promotion"]
+    );
+
+    if (!data || data.length == 0) {
+      return res.status(201).send({
+        success: false,
+        message: "Promotion not found",
+      });
+    }
+
+    for (const singleData of data) {
+      const promotionID = singleData.id;
+      const [used_time] = await db.query(
+        "SELECT SUM(used_time) AS total_used_time FROM user_promotion WHERE promotion_id =?",
+        [promotionID]
+      );
+
+      singleData.used_time = used_time[0].total_used_time;
+    }
 
     res.status(200).send({
       success: true,
@@ -88,7 +125,16 @@ exports.getAllPromotion = async (req, res) => {
 exports.getSinglePromotion = async (req, res) => {
   try {
     const id = req.params.id;
-    const [data] = await db.query("SELECT * FROM promotion WHERE id=? ", [id]);
+    const [data] = await db.query(
+      `SELECT 
+      prmtn.*,
+      fd.name AS food_details_name, 
+      fd.image AS food_details_image
+      FROM promotion prmtn
+      LEFT JOIN food_details fd ON prmtn.food_id = fd.id
+      WHERE prmtn.id=? `,
+      [id]
+    );
 
     if (!data || data.length == 0) {
       return res.status(201).send({
@@ -124,7 +170,6 @@ exports.updatePromotion = async (req, res) => {
 
     const {
       name,
-      code,
       date,
       discount_percentage,
       discount_amount,
@@ -134,6 +179,9 @@ exports.updatePromotion = async (req, res) => {
       is_duration_date,
       is_discount_percentage,
       is_discount_amount,
+      carry_out_use_time,
+      delivery_use_time,
+      food_id,
     } = req.body;
 
     const [preData] = await db.query(`SELECT * FROM promotion WHERE id=?`, [
@@ -149,10 +197,9 @@ exports.updatePromotion = async (req, res) => {
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE promotion SET name=?, code=?, date=?, discount_percentage = ?, discount_amount = ?, start_date=?, end_date=?, is_date=?, is_duration_date=?, is_discount_percentage=?, is_discount_amount=? WHERE id = ?",
+      "UPDATE promotion SET name=?, date=?, discount_percentage = ?, discount_amount = ?, start_date=?, end_date=?, is_date=?, is_duration_date=?, is_discount_percentage=?, is_discount_amount=?, carry_out_use_time=?, delivery_use_time=?, food_id=? WHERE id = ?",
       [
         name || preData[0].name,
-        code || preData[0].code,
         date,
         discount_percentage,
         discount_amount,
@@ -162,6 +209,9 @@ exports.updatePromotion = async (req, res) => {
         is_duration_date,
         is_discount_percentage,
         is_discount_amount,
+        carry_out_use_time,
+        delivery_use_time,
+        food_id,
         id,
       ]
     );

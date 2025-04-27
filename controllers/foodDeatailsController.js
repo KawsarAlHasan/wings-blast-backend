@@ -11,12 +11,19 @@ exports.createFoodDetails = async (req, res) => {
       description,
       food_menu_id,
       food_menu_name,
+      discount_percentage,
+      discount_amount,
+      is_discount_percentage,
+      is_discount_amount,
+      buy_one_get_one_id,
+      is_buy_one_get_one,
       addons,
       drinks,
       beverages,
       sandCust,
       comboSide,
       ricePlatter,
+      upgrade_food_details,
     } = req.body;
 
     if (!category_id || !name || !price || !cal) {
@@ -39,10 +46,14 @@ exports.createFoodDetails = async (req, res) => {
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
     const parsedComboSide = comboSide ? JSON.parse(comboSide) : [];
     const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
+    const parsedUpgradeFoodDetails = upgrade_food_details
+      ? JSON.parse(upgrade_food_details)
+      : [];
 
     // Insert Food details into the database
     const [result] = await db.query(
-      "INSERT INTO food_details (category_id, name, image, price, cal, description, food_menu_id, food_menu_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      is_discount_amount || 0,
+      "INSERT INTO food_details (category_id, name, image, price, cal, description, food_menu_id, food_menu_name, discount_percentage, discount_amount, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
         name,
@@ -52,6 +63,10 @@ exports.createFoodDetails = async (req, res) => {
         description || "",
         food_menu_id || 0,
         food_menu_name || "",
+        discount_percentage || 0,
+        discount_amount || 0,
+        is_discount_percentage || 0,
+        is_discount_amount || 0,
       ]
     );
 
@@ -143,6 +158,48 @@ exports.createFoodDetails = async (req, res) => {
         fff.isPaid,
       ]);
       await db.query(query, [values]);
+    }
+
+    // Upgrade Food Details
+    if (
+      Array.isArray(parsedUpgradeFoodDetails) &&
+      parsedUpgradeFoodDetails.length > 0
+    ) {
+      for (const upgradeFoodDetail of parsedUpgradeFoodDetails) {
+        const [foodDetails] = await db.query(
+          "SELECT name, price, cal, image FROM food_details WHERE id =?",
+          [upgradeFoodDetail]
+        );
+
+        const upgrade_food_details_name = foodDetails[0].name;
+        const upgrade_extra_price = foodDetails[0].price - price;
+        const upgrade_cal = foodDetails[0].cal;
+        const upgrade_image = foodDetails[0].image;
+
+        await db.query(
+          `INSERT INTO upgrade_food_details (food_details_id, upgrade_food_details_id, food_details_name, extra_price, cal, image ) VALUES (?, ?, ?, ?, ?, ?) `,
+          [
+            food_details_id,
+            upgradeFoodDetail,
+            upgrade_food_details_name,
+            upgrade_extra_price,
+            upgrade_cal,
+            upgrade_image,
+          ]
+        );
+      }
+    }
+
+    if (buy_one_get_one_id === 99999999999) {
+      await db.query(
+        `UPDATE food_details SET buy_one_get_one_id=?, is_buy_one_get_one=?  WHERE id =?`,
+        [food_details_id, is_buy_one_get_one, food_details_id]
+      );
+    } else if (buy_one_get_one_id > 0) {
+      await db.query(
+        `UPDATE food_details SET buy_one_get_one_id=?, is_buy_one_get_one=?  WHERE id =?`,
+        [buy_one_get_one_id, is_buy_one_get_one, food_details_id]
+      );
     }
 
     res.status(200).send({
@@ -345,6 +402,17 @@ exports.getSingleFoodDetails = async (req, res) => {
       });
     }
 
+    let buy_one_get_one = {};
+    if (foodDetails[0].buy_one_get_one_id === id) {
+      buy_one_get_one = foodDetails[0];
+    } else if (foodDetails[0].buy_one_get_one_id > 0) {
+      const [foodDetailsGetOnBuyOn] = await db.query(
+        "SELECT * FROM food_details WHERE id =?",
+        [foodDetails[0].buy_one_get_one_id]
+      );
+      buy_one_get_one = foodDetailsGetOnBuyOn[0];
+    }
+
     const [addons] = await db.query(
       "SELECT * FROM food_details_addons WHERE food_details_id=? ORDER BY sn_number ASC",
       [id]
@@ -496,9 +564,16 @@ exports.getSingleFoodDetails = async (req, res) => {
       }
     }
 
+    const [upgradeFoodDetails] = await db.query(
+      "SELECT * FROM upgrade_food_details WHERE food_details_id =?",
+      [id]
+    );
+
     const foodInfo = {
       ...foodDetails[0],
+      upgrade_food_details: upgradeFoodDetails,
       ...feature,
+      buy_one_get_one_food: buy_one_get_one,
     };
 
     // Send success response with all food details
@@ -529,12 +604,19 @@ exports.updateFoodDetails = async (req, res) => {
       description,
       food_menu_id,
       food_menu_name,
+      discount_percentage,
+      discount_amount,
+      is_discount_percentage,
+      is_discount_amount,
+      buy_one_get_one_id,
+      is_buy_one_get_one,
       addons,
       drinks,
       beverages,
       sandCust,
       comboSide,
       ricePlatter,
+      upgrade_food_details,
     } = req.body;
 
     // Parse and validate addons, sides, drinks, beverages
@@ -544,6 +626,9 @@ exports.updateFoodDetails = async (req, res) => {
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
     const parsedComboSide = comboSide ? JSON.parse(comboSide) : [];
     const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
+    const parsedUpgradeFoodDetails = upgrade_food_details
+      ? JSON.parse(upgrade_food_details)
+      : [];
 
     // Retrieve food details from the main table
     const [preDoodDetails] = await db.query(
@@ -570,7 +655,8 @@ exports.updateFoodDetails = async (req, res) => {
     const [result] = await db.query(
       `UPDATE food_details SET
         category_id = ?, name = ?, image = ?, price = ?, cal = ?, description = ?,
-        food_menu_id = ?, food_menu_name = ?
+        food_menu_id = ?, food_menu_name = ?, discount_percentage =?, discount_amount =?, 
+        is_discount_percentage =?, is_discount_amount =?, buy_one_get_one_id =?, is_buy_one_get_one = ?
       WHERE id = ?`,
       [
         category_id || preDoodDetails[0].category_id,
@@ -581,6 +667,12 @@ exports.updateFoodDetails = async (req, res) => {
         description || preDoodDetails[0].description,
         food_menu_id || preDoodDetails[0].food_menu_id,
         food_menu_name || preDoodDetails[0].food_menu_name,
+        discount_percentage || preDoodDetails[0].discount_percentage,
+        discount_amount || preDoodDetails[0].discount_amount,
+        is_discount_percentage || preDoodDetails[0].is_discount_percentage,
+        is_discount_amount || preDoodDetails[0].is_discount_amount,
+        buy_one_get_one_id || preDoodDetails[0].buy_one_get_one_id,
+        is_buy_one_get_one || preDoodDetails[0].is_buy_one_get_one,
         food_details_id,
       ]
     );
@@ -675,6 +767,46 @@ exports.updateFoodDetails = async (req, res) => {
       await db.query(query, [values]);
     }
 
+    const finalPrices = price || preDoodDetails[0].price;
+
+    // Upgrade Food Details
+    if (
+      Array.isArray(parsedUpgradeFoodDetails) &&
+      parsedUpgradeFoodDetails.length > 0
+    ) {
+      for (const upgradeFoodDetail of parsedUpgradeFoodDetails) {
+        const upgrade_food_details_id =
+          upgradeFoodDetail.upgrade_food_details_id;
+
+        await db.query(
+          `DELETE FROM upgrade_food_details WHERE food_details_id = ?`,
+          [food_details_id]
+        );
+
+        const [foodDetails] = await db.query(
+          "SELECT name, price, cal, image FROM food_details WHERE id =?",
+          [upgrade_food_details_id]
+        );
+
+        const upgrade_food_details_name = foodDetails[0].name;
+        const upgrade_extra_price = foodDetails[0].price - finalPrices;
+        const upgrade_cal = foodDetails[0].cal;
+        const upgrade_image = foodDetails[0].image;
+
+        await db.query(
+          `INSERT INTO upgrade_food_details (food_details_id, upgrade_food_details_id, food_details_name, extra_price, cal, image ) VALUES (?, ?, ?, ?, ?, ?) `,
+          [
+            food_details_id,
+            upgrade_food_details_id,
+            upgrade_food_details_name,
+            upgrade_extra_price,
+            upgrade_cal,
+            upgrade_image,
+          ]
+        );
+      }
+    }
+
     const [data] = await db.query(
       `SELECT * FROM card WHERE food_details_id=? `,
       [food_details_id]
@@ -731,6 +863,10 @@ exports.deleteFoodDetails = async (req, res) => {
     ]);
     await db.query(
       `DELETE FROM food_details_addons WHERE food_details_id = ?`,
+      [id]
+    );
+    await db.query(
+      `DELETE FROM upgrade_food_details WHERE food_details_id = ?`,
       [id]
     );
 
@@ -795,6 +931,73 @@ exports.foodDetailStatus = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error in Update food details status ",
+      error: error.message,
+    });
+  }
+};
+
+// Get All FoodDetails for admin panel
+exports.getAllFoodDetailsForAdminPanel = async (req, res) => {
+  try {
+    // Extract query parameters
+    const { name, checkPrice } = req.query;
+
+    const price = checkPrice ? parseFloat(checkPrice) : 0;
+
+    // Start building the query with the main food details table
+    let query =
+      "SELECT id, name, price, cal, image FROM food_details WHERE price > ?";
+    const queryParams = [price];
+
+    // Append conditions to the query based on the provided filters
+    if (name) {
+      query += " AND name LIKE ?";
+      queryParams.push(`%${name}%`); // For partial matching on name
+    }
+
+    // Execute the query with parameters
+    const [foodDetails] = await db.query(query, queryParams);
+
+    // If no data found, send an empty response
+    if (foodDetails.length === 0) {
+      return res.status(200).send({
+        success: true,
+        message: "No food details found",
+        data: [],
+      });
+    }
+
+    // Send success response with food details
+    res.status(200).send({
+      success: true,
+      message: "Food details retrieved successfully",
+      data: foodDetails,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "An error occurred while retrieving the Food Details",
+      error: error.message,
+    });
+  }
+};
+
+exports.discountFoodDetails = async (req, res) => {
+  try {
+    const [data] = await db.query(
+      `SELECT * FROM food_details WHERE buy_one_get_one_id > 0 OR is_discount_percentage = 1 OR is_discount_amount = 1`
+    );
+
+    res.status(200).send({
+      success: true,
+      message: "Get All Discount Food Details",
+      totalProduct: data.length,
+      data: data,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
       error: error.message,
     });
   }
