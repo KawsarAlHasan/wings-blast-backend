@@ -2,7 +2,81 @@ const db = require("../config/db");
 const { sendBulkEmails } = require("../middleware/sendBulkEmails");
 const { sendBulkPromotionEmails } = require("../middleware/sendBulkEmails");
 
-// `coupons`(`id`, `name`, `carry_out_use_time`, `delivery_use_time`, `discount_percentage`, `discount_amount`, `date`, `start_date`, `end_date`, `is_date`, `is_duration_date`, `is_discount_percentage`, `is_discount_amount`, `is_active`
+// `offers`(`id`, `type`, `code`, `food_id`, `name`, `image`, `carry_out_use_time`, `delivery_use_time`, `discount_percentage`, `discount_amount`, `date`, `start_date`
+// , `end_date`, `is_date`, `is_duration_date`, `is_discount_percentage`, `is_discount_amount`, `is_active`)
+
+// `user_offers`(`id`, `type_id`, `user_id`, `sent_time`, `delivery_used_time`, `carry_out_used_time`, `sent_at`, `used_at`
+
+exports.createOffers2 = async (req, res) => {
+  try {
+    const {
+      type,
+      code,
+      food_id,
+      name,
+      image,
+      carry_out_use_time,
+      delivery_use_time,
+      discount_percentage,
+      discount_amount,
+      date,
+      start_date,
+      end_date,
+      is_date,
+      is_duration_date,
+      is_discount_percentage,
+      is_discount_amount,
+    } = req.body;
+
+    if (!type || !code) {
+      return res.status(400).send({
+        success: false,
+        message: "Please provide type & code field",
+      });
+    }
+
+    const [result] = await db.query(
+      "INSERT INTO offers ( type, code, food_id, name, image, carry_out_use_time, delivery_use_time, discount_percentage, discount_amount, date, start_date, end_date, is_date, is_duration_date, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        type,
+        code,
+        food_id || 0,
+        name || "",
+        image || "",
+        carry_out_use_time || 0,
+        delivery_use_time || 0,
+        discount_percentage || 0,
+        discount_amount || 0,
+        date || 0,
+        start_date || 0,
+        end_date || 0,
+        is_date || 0,
+        is_duration_date || 0,
+        is_discount_percentage || 0,
+        is_discount_amount || 0,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(500).send({
+        success: false,
+        message: "Failed to insert Offer, please try again",
+      });
+    }
+
+    // Send success response
+    res.status(200).send({
+      success: true,
+      message: "Offer inserted successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 // create coupons
 exports.createCoupons = async (req, res) => {
@@ -437,7 +511,7 @@ exports.getCouponsSendUser = async (req, res) => {
 
 exports.getMyDiscountsOffers = async (req, res) => {
   try {
-    const { code, user_id, delivery_type } = req.body;
+    const { code, user_id, delivery_type, food_ids } = req.body;
 
     if (!code || !user_id) {
       return res.status(400).send({
@@ -516,9 +590,66 @@ exports.getMyDiscountsOffers = async (req, res) => {
       }
     }
 
+    if (offer?.type == "promotion") {
+      const food_id = offer?.food_id;
+      const matchedFood = food_ids.find((item) => item.food_id === food_id);
+
+      if (matchedFood) {
+        let promotionOfer = offer;
+
+        if (offer.is_discount_percentage == 1) {
+          const [foodData] = await db.query(
+            `SELECT id, price FROM food_details WHERE id = ?`,
+            [food_id]
+          );
+
+          const discountPercentage = offer.discount_percentage;
+          const foodPrice = foodData[0]?.price;
+          const foodQuentity = matchedFood?.quentity;
+
+          const totalPrice = foodPrice * foodQuentity;
+          const discountAmount = (totalPrice * discountPercentage) / 100;
+
+          const sendPromotionOffer = {
+            id: offer.id,
+            type: offer.type,
+            code: offer.code,
+            food_id: offer.food_id,
+            name: offer.name,
+            image: offer.image,
+            carry_out_use_time: offer.carry_out_use_time,
+            delivery_use_time: offer.delivery_use_time,
+            discount_percentage: 0,
+            discount_amount: discountAmount,
+            date: offer.date,
+            start_date: offer.start_date,
+            end_date: offer.end_date,
+            is_date: offer.is_date,
+            is_duration_date: offer.is_duration_date,
+            is_discount_percentage: 0,
+            is_discount_amount: 1,
+            is_active: offer.is_active,
+          };
+
+          promotionOfer = sendPromotionOffer;
+        }
+
+        return res.status(200).send({
+          success: true,
+          message: "Single Food Promotion",
+          data: promotionOfer,
+        });
+      } else {
+        return res.status(404).send({
+          success: false,
+          message: "There is no promotion food here.",
+        });
+      }
+    }
+
     res.status(200).send({
       success: true,
-      message: "Offer is valid",
+      message: "All Food Offer",
       data: offer,
     });
   } catch (error) {

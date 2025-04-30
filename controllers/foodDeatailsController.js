@@ -52,7 +52,6 @@ exports.createFoodDetails = async (req, res) => {
 
     // Insert Food details into the database
     const [result] = await db.query(
-      is_discount_amount || 0,
       "INSERT INTO food_details (category_id, name, image, price, cal, description, food_menu_id, food_menu_name, discount_percentage, discount_amount, is_discount_percentage, is_discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         category_id,
@@ -646,7 +645,7 @@ exports.updateFoodDetails = async (req, res) => {
     }
 
     const images = req.file;
-    let image = preDoodDetails[0].image;
+    let image = preDoodDetails[0]?.image;
     if (images && images.path) {
       image = `https://api.wingsblast.com/public/images/${images.filename}`;
     }
@@ -655,24 +654,24 @@ exports.updateFoodDetails = async (req, res) => {
     const [result] = await db.query(
       `UPDATE food_details SET
         category_id = ?, name = ?, image = ?, price = ?, cal = ?, description = ?,
-        food_menu_id = ?, food_menu_name = ?, discount_percentage =?, discount_amount =?, 
+        food_menu_id = ?, food_menu_name = ?, discount_percentage =?, discount_amount =?,
         is_discount_percentage =?, is_discount_amount =?, buy_one_get_one_id =?, is_buy_one_get_one = ?
       WHERE id = ?`,
       [
-        category_id || preDoodDetails[0].category_id,
-        name || preDoodDetails[0].name,
+        category_id || preDoodDetails[0]?.category_id,
+        name || preDoodDetails[0]?.name,
         image,
-        price || preDoodDetails[0].price,
-        cal || preDoodDetails[0].cal,
-        description || preDoodDetails[0].description,
-        food_menu_id || preDoodDetails[0].food_menu_id,
-        food_menu_name || preDoodDetails[0].food_menu_name,
-        discount_percentage || preDoodDetails[0].discount_percentage,
-        discount_amount || preDoodDetails[0].discount_amount,
-        is_discount_percentage || preDoodDetails[0].is_discount_percentage,
-        is_discount_amount || preDoodDetails[0].is_discount_amount,
-        buy_one_get_one_id || preDoodDetails[0].buy_one_get_one_id,
-        is_buy_one_get_one || preDoodDetails[0].is_buy_one_get_one,
+        price || preDoodDetails[0]?.price,
+        cal || preDoodDetails[0]?.cal,
+        description || preDoodDetails[0]?.description,
+        food_menu_id || preDoodDetails[0]?.food_menu_id,
+        food_menu_name || preDoodDetails[0]?.food_menu_name,
+        discount_percentage || preDoodDetails[0]?.discount_percentage,
+        discount_amount || preDoodDetails[0]?.discount_amount,
+        is_discount_percentage || preDoodDetails[0]?.is_discount_percentage,
+        is_discount_amount || preDoodDetails[0]?.is_discount_amount,
+        buy_one_get_one_id || preDoodDetails[0]?.buy_one_get_one_id,
+        is_buy_one_get_one || preDoodDetails[0]?.is_buy_one_get_one,
         food_details_id,
       ]
     );
@@ -774,10 +773,7 @@ exports.updateFoodDetails = async (req, res) => {
       Array.isArray(parsedUpgradeFoodDetails) &&
       parsedUpgradeFoodDetails.length > 0
     ) {
-      for (const upgradeFoodDetail of parsedUpgradeFoodDetails) {
-        const upgrade_food_details_id =
-          upgradeFoodDetail.upgrade_food_details_id;
-
+      for (const upgrade_food_details_id of parsedUpgradeFoodDetails) {
         await db.query(
           `DELETE FROM upgrade_food_details WHERE food_details_id = ?`,
           [food_details_id]
@@ -788,10 +784,10 @@ exports.updateFoodDetails = async (req, res) => {
           [upgrade_food_details_id]
         );
 
-        const upgrade_food_details_name = foodDetails[0].name;
-        const upgrade_extra_price = foodDetails[0].price - finalPrices;
-        const upgrade_cal = foodDetails[0].cal;
-        const upgrade_image = foodDetails[0].image;
+        const upgrade_food_details_name = foodDetails[0]?.name;
+        const upgrade_extra_price = foodDetails[0]?.price - finalPrices;
+        const upgrade_cal = foodDetails[0]?.cal;
+        const upgrade_image = foodDetails[0]?.image;
 
         await db.query(
           `INSERT INTO upgrade_food_details (food_details_id, upgrade_food_details_id, food_details_name, extra_price, cal, image ) VALUES (?, ?, ?, ?, ?, ?) `,
@@ -815,13 +811,6 @@ exports.updateFoodDetails = async (req, res) => {
     for (const singleData of data) {
       const card_id = singleData.id;
       await db.query(`DELETE FROM card_addons WHERE card_id=?`, [card_id]);
-      await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [card_id]);
-      await db.query(`DELETE FROM toppings_for_card WHERE card_id=?`, [
-        card_id,
-      ]);
-      await db.query(`DELETE FROM sandCust_for_card WHERE card_id=?`, [
-        card_id,
-      ]);
     }
 
     await db.query(`DELETE FROM card WHERE food_details_id=?`, [
@@ -833,6 +822,7 @@ exports.updateFoodDetails = async (req, res) => {
       message: "Food Details updated successfully",
     });
   } catch (error) {
+    console.log("error", error.message);
     res.status(500).send({
       success: false,
       message: "An error occurred while updating the Food Details",

@@ -82,6 +82,33 @@ exports.getAllFoodMenu = async (req, res) => {
   }
 };
 
+// get all FoodMenu for admin
+exports.getAllFoodMenuForAdmin = async (req, res) => {
+  try {
+    const [foodMenus] = await db.query(`SELECT * FROM food_menu`);
+    if (!foodMenus || foodMenus.length === 0) {
+      return res.status(201).send({
+        success: true,
+        message: "No Food menu found",
+        data: [],
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Get all Food menu with details",
+      totalFoodMenu: foodMenus.length,
+      data: foodMenus,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in Get All Food menu",
+      error: error.message,
+    });
+  }
+};
+
 // single food menu
 exports.getSingleFoodMenu = async (req, res) => {
   try {

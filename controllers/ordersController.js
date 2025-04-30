@@ -153,31 +153,30 @@ exports.createOrders = async (req, res) => {
       const message = `A new order has been placed by ${first_name} ${last_name}. Order ID: ${orderId}. Please review the details.`;
 
       if (isLater) {
-        const [adminDeviceData] = await db.query(
-          "SELECT * FROM admin_device WHERE admin_id=?",
-          [1]
-        );
-        // Get the specific order from the orders table
-        const [orders] = await db.query("SELECT * FROM orders WHERE id = ?", [
-          orderId,
-        ]);
-        const orderDetails = orders[0];
-        for (const token of adminDeviceData) {
-          const registrationToken = token?.fcm_device_token;
-
-          const messageFMS = {
-            notification: {
-              title: title,
-              body: message,
-            },
-            token: registrationToken,
-            data: {
-              order: JSON.stringify(orderDetails),
-            },
-          };
-          const response = await firebaseAdmin.messaging().send(messageFMS);
-          console.log("Successfully sent message:", response);
-        }
+        // const [adminDeviceData] = await db.query(
+        //   "SELECT * FROM admin_device WHERE admin_id=?",
+        //   [1]
+        // );
+        // // Get the specific order from the orders table
+        // const [orders] = await db.query("SELECT * FROM orders WHERE id = ?", [
+        //   orderId,
+        // ]);
+        // const orderDetails = orders[0];
+        // for (const token of adminDeviceData) {
+        //   const registrationToken = token?.fcm_device_token;
+        //   const messageFMS = {
+        //     notification: {
+        //       title: title,
+        //       body: message,
+        //     },
+        //     token: registrationToken,
+        //     data: {
+        //       order: JSON.stringify(orderDetails),
+        //     },
+        //   };
+        //   const response = await firebaseAdmin.messaging().send(messageFMS);
+        //   console.log("Successfully sent message:", response);
+        // }
       }
 
       // Insert Notification for Each Admin
@@ -273,275 +272,275 @@ exports.createOrders = async (req, res) => {
   }
 };
 
-// create Orders
-exports.createOrder = async (req, res) => {
-  const {
-    user_id,
-    guest_user_id,
-    first_name,
-    last_name,
-    phone,
-    email,
-    delivery_type,
-    delevery_address,
-    building_suite_apt,
-    sub_total,
-    tax,
-    fees,
-    delivery_fee,
-    tips,
-    coupon_discount,
-    total_price,
-    isLater,
-    later_date,
-    later_slot,
-    foods,
-  } = req.body;
-  try {
-    const laterDate = new Date(later_date);
-    const now = new Date();
+// // create Orders
+// exports.createOrder = async (req, res) => {
+//   const {
+//     user_id,
+//     guest_user_id,
+//     first_name,
+//     last_name,
+//     phone,
+//     email,
+//     delivery_type,
+//     delevery_address,
+//     building_suite_apt,
+//     sub_total,
+//     tax,
+//     fees,
+//     delivery_fee,
+//     tips,
+//     coupon_discount,
+//     total_price,
+//     isLater,
+//     later_date,
+//     later_slot,
+//     foods,
+//   } = req.body;
+//   try {
+//     const laterDate = new Date(later_date);
+//     const now = new Date();
 
-    const date = laterDate == "Invalid Date" ? now : laterDate;
+//     const date = laterDate == "Invalid Date" ? now : laterDate;
 
-    // Generate unique Order Id
-    async function generateUniqueOrderId(length, batchSize = 4) {
-      const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//     // Generate unique Order Id
+//     async function generateUniqueOrderId(length, batchSize = 4) {
+//       const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-      // Helper function to generate a single random code
-      function generateRandomCode(length) {
-        let result = "";
-        for (let i = 0; i < length; i++) {
-          const randomIndex = Math.floor(Math.random() * characters.length);
-          result += characters[randomIndex];
-        }
-        return result;
-      }
+//       // Helper function to generate a single random code
+//       function generateRandomCode(length) {
+//         let result = "";
+//         for (let i = 0; i < length; i++) {
+//           const randomIndex = Math.floor(Math.random() * characters.length);
+//           result += characters[randomIndex];
+//         }
+//         return result;
+//       }
 
-      let uniqueCode = null;
+//       let uniqueCode = null;
 
-      while (!uniqueCode) {
-        // Step 1: Generate a batch of random codes
-        const codesBatch = [];
-        for (let i = 0; i < batchSize; i++) {
-          codesBatch.push(generateRandomCode(length));
-        }
+//       while (!uniqueCode) {
+//         // Step 1: Generate a batch of random codes
+//         const codesBatch = [];
+//         for (let i = 0; i < batchSize; i++) {
+//           codesBatch.push(generateRandomCode(length));
+//         }
 
-        // Step 2: Check these codes against the database
-        const placeholders = codesBatch.map(() => "?").join(",");
-        const [existingCodes] = await db.query(
-          `SELECT order_id FROM orders WHERE order_id IN (${placeholders})`,
-          codesBatch
-        );
+//         // Step 2: Check these codes against the database
+//         const placeholders = codesBatch.map(() => "?").join(",");
+//         const [existingCodes] = await db.query(
+//           `SELECT order_id FROM orders WHERE order_id IN (${placeholders})`,
+//           codesBatch
+//         );
 
-        // Step 3: Filter out codes that already exist in the database
-        const existingCodeSet = new Set(
-          existingCodes.map((row) => row.order_id)
-        );
+//         // Step 3: Filter out codes that already exist in the database
+//         const existingCodeSet = new Set(
+//           existingCodes.map((row) => row.order_id)
+//         );
 
-        // Step 4: Find the first code that doesn't exist in the database
-        uniqueCode = codesBatch.find((code) => !existingCodeSet.has(code));
-      }
+//         // Step 4: Find the first code that doesn't exist in the database
+//         uniqueCode = codesBatch.find((code) => !existingCodeSet.has(code));
+//       }
 
-      return uniqueCode;
-    }
+//       return uniqueCode;
+//     }
 
-    // Generate unique Order Id (if not provided)
-    const order_id = await generateUniqueOrderId(4);
+//     // Generate unique Order Id (if not provided)
+//     const order_id = await generateUniqueOrderId(4);
 
-    // Insert order into the 'orders' table
-    const [orderResult] = await db.query(
-      "INSERT INTO orders (order_id, user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, fees, delivery_fee, tips, coupon_discount, total_price, isLater, later_date, later_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        order_id,
-        user_id,
-        first_name || "",
-        last_name || "",
-        phone,
-        email,
-        delivery_type || "",
-        delevery_address || "",
-        building_suite_apt || "",
-        sub_total || 0,
-        tax || 0,
-        fees || 0,
-        delivery_fee || 0,
-        tips || 0,
-        coupon_discount || 0,
-        total_price,
-        isLater || 0,
-        date,
-        later_slot || "",
-      ]
-    );
+//     // Insert order into the 'orders' table
+//     const [orderResult] = await db.query(
+//       "INSERT INTO orders (order_id, user_id, first_name, last_name, phone, email, delivery_type, delevery_address, building_suite_apt, sub_total, tax, fees, delivery_fee, tips, coupon_discount, total_price, isLater, later_date, later_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+//       [
+//         order_id,
+//         user_id,
+//         first_name || "",
+//         last_name || "",
+//         phone,
+//         email,
+//         delivery_type || "",
+//         delevery_address || "",
+//         building_suite_apt || "",
+//         sub_total || 0,
+//         tax || 0,
+//         fees || 0,
+//         delivery_fee || 0,
+//         tips || 0,
+//         coupon_discount || 0,
+//         total_price,
+//         isLater || 0,
+//         date,
+//         later_slot || "",
+//       ]
+//     );
 
-    const orderId = orderResult.insertId;
+//     const orderId = orderResult.insertId;
 
-    // Insert each food item and its addons into the 'foods' and 'addons' tables
-    for (const food of foods) {
-      const { name, image, price, quantity, description, note, addons } = food;
+//     // Insert each food item and its addons into the 'foods' and 'addons' tables
+//     for (const food of foods) {
+//       const { name, image, price, quantity, description, note, addons } = food;
 
-      // Insert food into the 'foods' table
-      const [foodResult] = await db.query(
-        "INSERT INTO orders_foods (order_id, name, image, price, quantity, description, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [orderId, name, image, price, quantity, description, note || ""]
-      );
+//       // Insert food into the 'foods' table
+//       const [foodResult] = await db.query(
+//         "INSERT INTO orders_foods (order_id, name, image, price, quantity, description, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
+//         [orderId, name, image, price, quantity, description, note || ""]
+//       );
 
-      const foodId = foodResult.insertId;
-      // Insert addons into the 'addons' table
-      if (addons) {
-        for (const type in addons) {
-          const items = addons[type];
-          for (const item of items) {
-            const { name, price, quantity, child_item_name, isPaid } = item;
+//       const foodId = foodResult.insertId;
+//       // Insert addons into the 'addons' table
+//       if (addons) {
+//         for (const type in addons) {
+//           const items = addons[type];
+//           for (const item of items) {
+//             const { name, price, quantity, child_item_name, isPaid } = item;
 
-            if (!name) continue;
+//             if (!name) continue;
 
-            await db.query(
-              "INSERT INTO addons (food_id, type, name, price, quantity, child_item_name, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?)",
-              [
-                foodId,
-                type,
-                name,
-                price || 0,
-                quantity || 1,
-                child_item_name || null,
-                isPaid || false,
-              ]
-            );
-          }
-        }
-      }
-    }
+//             await db.query(
+//               "INSERT INTO addons (food_id, type, name, price, quantity, child_item_name, isPaid) VALUES (?, ?, ?, ?, ?, ?, ?)",
+//               [
+//                 foodId,
+//                 type,
+//                 name,
+//                 price || 0,
+//                 quantity || 1,
+//                 child_item_name || null,
+//                 isPaid || false,
+//               ]
+//             );
+//           }
+//         }
+//       }
+//     }
 
-    if (orderId) {
-      // Notification Details
-      const type = "Admin";
-      const receiver_id = 1;
-      const sander_id = user_id;
-      const url = `/order/${orderId}`;
-      const title = "New Order Placed";
-      const message = `A new order has been placed by ${first_name} ${last_name}. Order ID: ${orderId}. Please review the details.`;
+//     if (orderId) {
+//       // Notification Details
+//       const type = "Admin";
+//       const receiver_id = 1;
+//       const sander_id = user_id;
+//       const url = `/order/${orderId}`;
+//       const title = "New Order Placed";
+//       const message = `A new order has been placed by ${first_name} ${last_name}. Order ID: ${orderId}. Please review the details.`;
 
-      if (isLater) {
-        const [adminDeviceData] = await db.query(
-          "SELECT * FROM admin_device WHERE admin_id=?",
-          [1]
-        );
-        // Get the specific order from the orders table
-        const [orders] = await db.query("SELECT * FROM orders WHERE id = ?", [
-          orderId,
-        ]);
-        const orderDetails = orders[0];
-        for (const token of adminDeviceData) {
-          const registrationToken = token?.fcm_device_token;
+//       if (isLater) {
+//         const [adminDeviceData] = await db.query(
+//           "SELECT * FROM admin_device WHERE admin_id=?",
+//           [1]
+//         );
+//         // Get the specific order from the orders table
+//         const [orders] = await db.query("SELECT * FROM orders WHERE id = ?", [
+//           orderId,
+//         ]);
+//         const orderDetails = orders[0];
+//         for (const token of adminDeviceData) {
+//           const registrationToken = token?.fcm_device_token;
 
-          const messageFMS = {
-            notification: {
-              title: title,
-              body: message,
-            },
-            token: registrationToken,
-            data: {
-              order: JSON.stringify(orderDetails),
-            },
-          };
-          // const response = await firebaseAdmin.messaging().send(messageFMS);
-          // console.log("Successfully sent message:", response);
-        }
-      }
+//           const messageFMS = {
+//             notification: {
+//               title: title,
+//               body: message,
+//             },
+//             token: registrationToken,
+//             data: {
+//               order: JSON.stringify(orderDetails),
+//             },
+//           };
+//           // const response = await firebaseAdmin.messaging().send(messageFMS);
+//           // console.log("Successfully sent message:", response);
+//         }
+//       }
 
-      // Insert Notification for Each Admin
-      const [notification] = await db.query(
-        "INSERT INTO notifications (type, receiver_id, sander_id, url, title, message) VALUES (?, ?, ?, ?, ?, ?)",
-        [type, receiver_id, sander_id, url, title, message]
-      );
+//       // Insert Notification for Each Admin
+//       const [notification] = await db.query(
+//         "INSERT INTO notifications (type, receiver_id, sander_id, url, title, message) VALUES (?, ?, ?, ?, ?, ?)",
+//         [type, receiver_id, sander_id, url, title, message]
+//       );
 
-      // Access Socket.io instance
-      const io = req.app.get("socketio");
-      if (!io) {
-        throw new Error("Socket.io is not initialized");
-      }
+//       // Access Socket.io instance
+//       const io = req.app.get("socketio");
+//       if (!io) {
+//         throw new Error("Socket.io is not initialized");
+//       }
 
-      // Emit notification
-      io.emit("receiveNotification", {
-        id: notification.insertId,
-        type,
-        orderId,
-        url,
-        title,
-        message,
-      });
+//       // Emit notification
+//       io.emit("receiveNotification", {
+//         id: notification.insertId,
+//         type,
+//         orderId,
+//         url,
+//         title,
+//         message,
+//       });
 
-      // send mail
-      const emailData = {
-        first_name,
-        last_name,
-        order_id,
-        phone,
-        email,
-        delivery_type,
-        delevery_address,
-        sub_total,
-        tax,
-        fees,
-        delivery_fee,
-        tips,
-        coupon_discount,
-        total_price,
-        later_date,
-        later_slot,
-        foods,
-      };
+//       // send mail
+//       const emailData = {
+//         first_name,
+//         last_name,
+//         order_id,
+//         phone,
+//         email,
+//         delivery_type,
+//         delevery_address,
+//         sub_total,
+//         tax,
+//         fees,
+//         delivery_fee,
+//         tips,
+//         coupon_discount,
+//         total_price,
+//         later_date,
+//         later_slot,
+//         foods,
+//       };
 
-      const emailResult = await sendMail(emailData);
-      if (!emailResult.messageId) {
-        res.status(500).send("Failed to send email");
-      }
+//       const emailResult = await sendMail(emailData);
+//       if (!emailResult.messageId) {
+//         res.status(500).send("Failed to send email");
+//       }
 
-      // delete card Data
-      const [cardData] = await db.query(
-        `SELECT * FROM card WHERE guest_user_id = ?`,
-        [guest_user_id]
-      );
-      for (const singleData of cardData) {
-        const card_id = singleData.id;
-        await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
-        await db.query(`DELETE FROM toppings_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
-        await db.query(`DELETE FROM sandCust_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
-      }
-      await db.query(`DELETE FROM card WHERE guest_user_id=?`, [guest_user_id]);
-    }
+//       // delete card Data
+//       const [cardData] = await db.query(
+//         `SELECT * FROM card WHERE guest_user_id = ?`,
+//         [guest_user_id]
+//       );
+//       for (const singleData of cardData) {
+//         const card_id = singleData.id;
+//         await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [
+//           card_id,
+//         ]);
+//         await db.query(`DELETE FROM toppings_for_card WHERE card_id=?`, [
+//           card_id,
+//         ]);
+//         await db.query(`DELETE FROM sandCust_for_card WHERE card_id=?`, [
+//           card_id,
+//         ]);
+//       }
+//       await db.query(`DELETE FROM card WHERE guest_user_id=?`, [guest_user_id]);
+//     }
 
-    // Send success response
-    res.status(200).send({
-      success: true,
-      message: "Order inserted successfully",
-    });
-  } catch (error) {
-    const emailData = {
-      email,
-      subject: "Order Processing Error",
-      message: `We encountered an error while processing your order. Please contact support with the provided email.`,
-    };
-    const emailResult = await supportEmail(emailData);
+//     // Send success response
+//     res.status(200).send({
+//       success: true,
+//       message: "Order inserted successfully",
+//     });
+//   } catch (error) {
+//     const emailData = {
+//       email,
+//       subject: "Order Processing Error",
+//       message: `We encountered an error while processing your order. Please contact support with the provided email.`,
+//     };
+//     const emailResult = await supportEmail(emailData);
 
-    if (!emailResult.messageId) {
-      res.status(500).send("Failed to send email");
-    }
+//     if (!emailResult.messageId) {
+//       res.status(500).send("Failed to send email");
+//     }
 
-    res.status(500).send({
-      success: false,
-      message: "An error occurred while inserting the order",
-      error: error.message,
-    });
-  }
-};
+//     res.status(500).send({
+//       success: false,
+//       message: "An error occurred while inserting the order",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // get all Orders with pagination, filtering, and search
 exports.getAllOrders = async (req, res) => {
@@ -722,6 +721,14 @@ exports.getSingleOrder = async (req, res) => {
             quantity: beverage.quantity,
             price: beverage.price,
             isPaid: beverage.isPaid,
+          })),
+        ricePlatter: addons
+          .filter((addon) => addon.type === "ricePlatter")
+          .map((ricePlatter) => ({
+            name: ricePlatter.name,
+            quantity: ricePlatter.quantity,
+            price: ricePlatter.price,
+            isPaid: ricePlatter.isPaid,
           })),
       };
     }
