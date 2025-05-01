@@ -71,6 +71,9 @@ app.use("/api/v1/user-voucher", require("./router/userVouchersRoute"));
 app.use("/api/v1/compare", require("./router/compareRoute"));
 app.use("/test", require("./test"));
 
+// settings
+app.use("/api/v1/banner", require("./router/settings/bannerRoute"));
+
 notifyAdminBeforeOrder();
 foodDetailsStatus();
 // birthdayScheduleChecker();
