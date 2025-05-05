@@ -3,7 +3,7 @@ const db = require("../../config/db");
 // create Banner
 exports.createBanner = async (req, res) => {
   try {
-    const { title, link_url, type, sn_number, status } = req.body;
+    const { title, link_type, link_url, type, sn_number, status } = req.body;
 
     const video_image = req.file;
     let videoImage = "";
@@ -14,9 +14,10 @@ exports.createBanner = async (req, res) => {
 
     // Insert banner into the database
     const [result] = await db.query(
-      "INSERT INTO banner (title, video_image, type, link_url, sn_number, status) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO banner (title, link_type, video_image, type, link_url, sn_number, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         title || "",
+        link_type,
         videoImage,
         type || "",
         link_url || "",
@@ -74,7 +75,7 @@ exports.updateBanner = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { title, link_url, type, sn_number, status } = req.body;
+    const { title, link_type, link_url, type, sn_number, status } = req.body;
 
     const [bannerPreData] = await db.query(`SELECT * FROM banner WHERE id=?`, [
       id,
@@ -95,12 +96,13 @@ exports.updateBanner = async (req, res) => {
 
     // Execute the update query
     const [result] = await db.query(
-      "UPDATE banner SET title=?, video_image=?, type=?, link_url = ?, sn_number = ?, status = ? WHERE id = ?",
+      "UPDATE banner SET title=?, video_image=?, type=?, link_url = ?, link_type=?, sn_number = ?, status = ? WHERE id = ?",
       [
         title || bannerPreData[0].title,
         videoImage,
         type || bannerPreData[0].type,
         link_url || bannerPreData[0].link_url,
+        link_type || bannerPreData[0].link_type,
         sn_number || bannerPreData[0].sn_number,
         status || bannerPreData[0].status,
         id,

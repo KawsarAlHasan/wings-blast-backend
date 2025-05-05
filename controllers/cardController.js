@@ -105,6 +105,7 @@ exports.getMyCards = async (req, res) => {
         fd.name AS food_name,
         fd.price AS food_price,
         fd.image AS food_image,
+        fd.buy_one_get_one_id,
         fd.description AS food_description
       FROM card crd
       LEFT JOIN food_details fd ON crd.food_details_id = fd.id
@@ -117,6 +118,20 @@ exports.getMyCards = async (req, res) => {
         success: false,
         message: "No Product found in card",
       });
+    }
+
+    for (const singleFood of cardForGuest) {
+      const buyOneGetOneID = singleFood.buy_one_get_one_id;
+      let buy_one_get_one = {};
+
+      if (buyOneGetOneID > 0) {
+        const [foodDetailsGetOnBuyOn] = await db.query(
+          "SELECT id, name, price, image, cal, description FROM food_details WHERE id =?",
+          [buyOneGetOneID]
+        );
+        buy_one_get_one = foodDetailsGetOnBuyOn[0];
+      }
+      singleFood.buy_one_get_one = buy_one_get_one;
     }
 
     async function getAddons(card_id, type, tableName) {

@@ -11,6 +11,7 @@ const {
   updateUserPassword,
   deleteUser,
   userSocialMediaLogin,
+  verifyToken,
 } = require("../controllers/userController");
 const verifyUser = require("../middleware/verifyUser");
 const verifyAdmin = require("../middleware/verifyAdmin");
@@ -18,6 +19,7 @@ const uploadImage = require("../middleware/imagesUploader");
 
 const router = express.Router();
 
+router.post("/firebase-phone", verifyToken);
 router.post("/signup", signUpUser);
 router.post("/login", userLogin);
 router.post("/social-login", userSocialMediaLogin);

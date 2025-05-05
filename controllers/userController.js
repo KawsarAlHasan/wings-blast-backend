@@ -3,6 +3,61 @@ const bcrypt = require("bcrypt");
 const { generateUserToken } = require("../config/userToken");
 const { sendMail } = require("../middleware/sandEmail");
 
+const firebaseAdmin = require("../config/firebase");
+
+// verify user
+exports.verifyToken = async (req, res) => {
+  const { token, first_name, last_name } = req.body;
+
+  if (!token || !first_name || !last_name) {
+    return res.status(201).send({
+      success: false,
+      message: "token, first_name, last_name is required in body",
+    });
+  }
+
+  try {
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+    const { uid, phone_number } = decodedToken;
+
+    // Check if user already exists
+    const [checkData] = await db.query(
+      `SELECT * FROM users WHERE uid=? AND phone_number=?`,
+      [uid, phone_number]
+    );
+
+    if (checkData.length > 0) {
+      const existingUser = checkData[0];
+      const authToken = generateUserToken({ id: existingUser.id });
+
+      res.status(200).json({
+        success: true,
+        message: "User already exists",
+        token: authToken,
+      });
+    } else {
+      const [result] = await db.query(
+        `INSERT INTO users (uid, first_name, last_name, phone) VALUES (?, ?, ?, ?)`,
+        [uid, first_name || "", last_name || "", phone_number]
+      );
+
+      const authToken = generateUserToken({ id: result.insertId });
+
+      res.status(200).json({
+        success: true,
+        message: "User registered",
+        token: authToken,
+      });
+    }
+  } catch (error) {
+    return res.status(401).send({
+      success: false,
+      message: "Invalid token",
+      error: error.message,
+    });
+  }
+};
+
 // sign up User
 exports.signUpUser = async (req, res) => {
   try {

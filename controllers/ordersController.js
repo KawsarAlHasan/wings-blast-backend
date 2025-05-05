@@ -25,6 +25,7 @@ exports.createOrders = async (req, res) => {
     isLater,
     later_date,
     later_slot,
+    offer_code,
     foods,
   } = req.body;
   try {
@@ -108,12 +109,34 @@ exports.createOrders = async (req, res) => {
 
     // Insert each food item and its addons into the 'foods' and 'addons' tables
     for (const food of foods) {
-      const { name, image, price, quantity, description, note, addons } = food;
+      const {
+        food_details_id,
+        name,
+        image,
+        price,
+        quantity,
+        description,
+        buy_one_get_one_id,
+        buy_one_get_one_name,
+        note,
+        addons,
+      } = food;
 
       // Insert food into the 'foods' table
       const [foodResult] = await db.query(
-        "INSERT INTO orders_foods (order_id, name, image, price, quantity, description, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [orderId, name, image, price, quantity, description, note || ""]
+        "INSERT INTO orders_foods (order_id, food_details_id, name, image, price, quantity, description, buy_one_get_one_id, buy_one_get_one_name, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          orderId,
+          food_details_id,
+          name,
+          image,
+          price,
+          quantity,
+          description,
+          buy_one_get_one_id || 0,
+          buy_one_get_one_name || "",
+          note || "",
+        ]
       );
 
       const foodId = foodResult.insertId;
@@ -201,31 +224,31 @@ exports.createOrders = async (req, res) => {
         message,
       });
 
-      // send mail
-      const emailData = {
-        first_name,
-        last_name,
-        order_id,
-        phone,
-        email,
-        delivery_type,
-        delevery_address,
-        sub_total,
-        tax,
-        fees,
-        delivery_fee,
-        tips,
-        coupon_discount,
-        total_price,
-        later_date,
-        later_slot,
-        foods,
-      };
+      // // send mail
+      // const emailData = {
+      //   first_name,
+      //   last_name,
+      //   order_id,
+      //   phone,
+      //   email,
+      //   delivery_type,
+      //   delevery_address,
+      //   sub_total,
+      //   tax,
+      //   fees,
+      //   delivery_fee,
+      //   tips,
+      //   coupon_discount,
+      //   total_price,
+      //   later_date,
+      //   later_slot,
+      //   foods,
+      // };
 
-      const emailResult = await sendMail(emailData);
-      if (!emailResult.messageId) {
-        res.status(500).send("Failed to send email");
-      }
+      // const emailResult = await sendMail(emailData);
+      // if (!emailResult.messageId) {
+      //   res.status(500).send("Failed to send email");
+      // }
 
       // delete card Data
       const [cardData] = await db.query(
@@ -234,15 +257,7 @@ exports.createOrders = async (req, res) => {
       );
       for (const singleData of cardData) {
         const card_id = singleData.id;
-        await db.query(`DELETE FROM flavers_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
-        await db.query(`DELETE FROM toppings_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
-        await db.query(`DELETE FROM sandCust_for_card WHERE card_id=?`, [
-          card_id,
-        ]);
+        await db.query(`DELETE FROM card_addons WHERE card_id=?`, [card_id]);
       }
       await db.query(`DELETE FROM card WHERE guest_user_id=?`, [guest_user_id]);
     }
@@ -672,7 +687,6 @@ exports.getSingleOrder = async (req, res) => {
           .map((flavor) => ({
             name: flavor.name,
             quantity: flavor.quantity,
-            rating: flavor.rating,
           })),
         toppings: addons
           .filter((addon) => addon.type === "toppings")
@@ -713,6 +727,7 @@ exports.getSingleOrder = async (req, res) => {
             quantity: drink.quantity,
             price: drink.price,
             isPaid: drink.isPaid,
+            child_item_name: drink.child_item_name,
           })),
         beverage: addons
           .filter((addon) => addon.type === "beverage")
