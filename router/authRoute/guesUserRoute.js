@@ -2,8 +2,8 @@ const express = require("express");
 const {
   createGuestUser,
   getGuestUser,
-} = require("../controllers/guestUserController");
-const verifyGuestUser = require("../middleware/verifyGuestUser");
+} = require("../../controllers/authController/guestUserController");
+const verifyGuestUser = require("../../middleware/verifyGuestUser");
 
 const router = express.Router();
 

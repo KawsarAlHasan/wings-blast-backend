@@ -50,9 +50,19 @@ exports.createCategory = async (req, res) => {
 // get all category
 exports.getAllCategory = async (req, res) => {
   try {
-    const [data] = await db.query(
-      "SELECT * FROM categories ORDER BY sn_number ASC"
-    );
+    const status = req.query.status || "Active";
+
+    let query = "SELECT * FROM categories";
+    const params = [];
+
+    if (status.toLowerCase() !== "all") {
+      query += " WHERE status = ?";
+      params.push(status);
+    }
+
+    query += " ORDER BY sn_number ASC";
+
+    const [data] = await db.query(query, params);
     if (!data || data.length == 0) {
       return res.status(200).send({
         success: true,
@@ -76,7 +86,7 @@ exports.getAllCategory = async (req, res) => {
   }
 };
 
-// get all category With Food
+// get all category With Food for admin
 exports.getAllCategoryWithFood = async (req, res) => {
   try {
     const [categoriesData] = await db.query(
@@ -131,7 +141,7 @@ exports.getAllCategoryWithFood = async (req, res) => {
 exports.getAllCategoryWithFoodForUser = async (req, res) => {
   try {
     const [categoriesData] = await db.query(
-      "SELECT * FROM categories ORDER BY sn_number ASC"
+      "SELECT * FROM categories WHERE status='Active' ORDER BY sn_number ASC"
     );
 
     if (!categoriesData || categoriesData.length === 0) {
@@ -147,7 +157,7 @@ exports.getAllCategoryWithFoodForUser = async (req, res) => {
       const category_id = category.id;
 
       const [foodMenus] = await db.query(
-        `SELECT * FROM food_menu WHERE category_id=?`,
+        `SELECT * FROM food_menu WHERE status='Active' AND category_id=?`,
         [category_id]
       );
 
@@ -226,6 +236,45 @@ exports.updateCategory = async (req, res) => {
     res.status(200).send({
       success: true,
       message: "Category updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating Category",
+      error: error.message,
+    });
+  }
+};
+
+// update category Status
+exports.updateCategoryStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { status } = req.body;
+
+    const [categoryPreData] = await db.query(
+      `SELECT * FROM categories WHERE id=?`,
+      [id]
+    );
+
+    if (!categoryPreData || categoryPreData.length == 0) {
+      return res.status(201).send({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // Execute the update query
+    const [result] = await db.query(
+      "UPDATE categories SET status = ? WHERE id = ?",
+      [status, id]
+    );
+
+    // Success response
+    res.status(200).send({
+      success: true,
+      message: "Category Status updated successfully",
     });
   } catch (error) {
     res.status(500).send({

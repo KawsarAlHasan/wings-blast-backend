@@ -1,15 +1,16 @@
 const express = require("express");
 
-const verifyAdmin = require("../middleware/verifyAdmin");
+const verifyAdmin = require("../../middleware/verifyAdmin");
 
-const uploadImage = require("../middleware/imagesUploader");
+const uploadImage = require("../../middleware/imagesUploader");
 const {
   createBeverage,
   getAllBeverage,
   getSingleBeverage,
   updateBeverage,
   deletebeverage,
-} = require("../controllers/beverageController");
+  updateBeverageStatus,
+} = require("../../controllers/foodDetailsFeature/beverageController");
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.put(
   uploadImage.single("image"),
   updateBeverage
 );
+router.put("/status/:id", verifyAdmin, updateBeverageStatus);
 router.delete("/delete/:id", verifyAdmin, deletebeverage);
 
 module.exports = router;

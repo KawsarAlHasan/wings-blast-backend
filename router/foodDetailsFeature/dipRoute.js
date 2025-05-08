@@ -1,15 +1,15 @@
 const express = require("express");
 
-const verifyAdmin = require("../middleware/verifyAdmin");
+const verifyAdmin = require("../../middleware/verifyAdmin");
 
-const uploadImage = require("../middleware/imagesUploader");
+const uploadImage = require("../../middleware/imagesUploader");
 const {
   createDip,
   getAllDip,
   getSingleDip,
   updateDip,
   deleteDip,
-} = require("../controllers/dipController");
+} = require("../../controllers/foodDetailsFeature/dipController");
 
 const router = express.Router();
 

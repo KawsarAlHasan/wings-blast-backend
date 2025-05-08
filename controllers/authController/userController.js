@@ -1,9 +1,9 @@
-const db = require("../config/db");
+const db = require("../../config/db");
 const bcrypt = require("bcrypt");
-const { generateUserToken } = require("../config/userToken");
-const { sendMail } = require("../middleware/sandEmail");
+const { generateUserToken } = require("../../config/userToken");
+const { sendMail } = require("../../middleware/sandEmail");
 
-const firebaseAdmin = require("../config/firebase");
+const firebaseAdmin = require("../../config/firebase");
 
 // verify user
 exports.verifyToken = async (req, res) => {

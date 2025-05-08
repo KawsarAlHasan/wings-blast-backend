@@ -12,10 +12,10 @@ const {
   deleteUser,
   userSocialMediaLogin,
   verifyToken,
-} = require("../controllers/userController");
-const verifyUser = require("../middleware/verifyUser");
-const verifyAdmin = require("../middleware/verifyAdmin");
-const uploadImage = require("../middleware/imagesUploader");
+} = require("../../controllers/authController/userController");
+const verifyUser = require("../../middleware/verifyUser");
+const verifyAdmin = require("../../middleware/verifyAdmin");
+const uploadImage = require("../../middleware/imagesUploader");
 
 const router = express.Router();
 

@@ -561,6 +561,17 @@ exports.getSingleFoodDetails = async (req, res) => {
           };
         }
       }
+
+      if (addon.type === "Sauce") {
+        if (addon.how_many_select > 0) {
+          const [rows] = await db.query("SELECT * FROM sauce");
+
+          feature["sauce"] = {
+            ...addon,
+            data: rows,
+          };
+        }
+      }
     }
 
     const [upgradeFoodDetails] = await db.query(

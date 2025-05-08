@@ -1,7 +1,7 @@
-const db = require("../config/db");
+const db = require("../../config/db");
 const express = require("express");
 const bcrypt = require("bcrypt");
-const sendResetEmail = require("../middleware/forgotEmail");
+const sendResetEmail = require("../../middleware/forgotEmail");
 const router = express.Router();
 
 // Step 1: Request to send reset code

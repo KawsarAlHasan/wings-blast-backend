@@ -1,7 +1,10 @@
 const express = require("express");
 
-const verifyAdmin = require("../middleware/verifyAdmin");
-const { adminLogin, getMeAdmin } = require("../controllers/adminController");
+const verifyAdmin = require("../../middleware/verifyAdmin");
+const {
+  adminLogin,
+  getMeAdmin,
+} = require("../../controllers/authController/adminController");
 const router = express.Router();
 
 // router.post("/signup", signUpAdmin);

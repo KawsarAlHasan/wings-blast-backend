@@ -170,6 +170,7 @@ exports.getMyCards = async (req, res) => {
       cdForUsr.sides = await getAddons(card_id, "side", "side");
       cdForUsr.bakery = await getAddons(card_id, "bakery", "beverage");
       cdForUsr.topping = await getAddons(card_id, "topping", "toppings");
+      cdForUsr.sauce = await getAddons(card_id, "sauce", "sauce");
       cdForUsr.ricePlatter = await getAddons(card_id, "ricePlatter", "side");
       cdForUsr.sandwich = await getAddons(
         card_id,

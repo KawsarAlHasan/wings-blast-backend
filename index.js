@@ -37,23 +37,32 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 // Routes
-app.use("/api/v1/admin", require("./router/adminRoute"));
-app.use("/api/v1/user", require("./router/userRoute"));
-app.use("/api/v1/forgot", require("./router/forgotPassword"));
+// auth
+app.use("/api/v1/admin", require("./router/authRoute/adminRoute"));
+app.use("/api/v1/user", require("./router/authRoute/userRoute"));
+app.use("/api/v1/guest-user", require("./router/authRoute/guesUserRoute"));
+app.use("/api/v1/forgot", require("./router/authRoute/forgotPassword"));
+
+// product features
+app.use(
+  "/api/v1/beverage",
+  require("./router/foodDetailsFeature/beverageRoute")
+);
+app.use("/api/v1/sauce", require("./router/foodDetailsFeature/sauceRoute"));
+
 app.use("/api/v1/category", require("./router/categoryRouter"));
 app.use("/api/v1/flavor", require("./router/flavorRoute"));
 app.use("/api/v1/foodmenu", require("./router/foodMenuRoute"));
 app.use("/api/v1/food-details", require("./router/foodDetailsRoute"));
 app.use("/api/v1/feature", require("./router/featureRoute"));
 app.use("/api/v1/product-feature", require("./router/productFeatureRoute"));
-app.use("/api/v1/dip", require("./router/dipRoute"));
+app.use("/api/v1/dip", require("./router/foodDetailsFeature/dipRoute"));
 app.use("/api/v1/side", require("./router/sideRoute"));
-app.use("/api/v1/beverage", require("./router/beverageRoute"));
 app.use("/api/v1/drink", require("./router/drinkRoute"));
 app.use("/api/v1/drink-name", require("./router/drinkNameRoute"));
 app.use("/api/v1/sand-cust", require("./router/sandCustRoute"));
 app.use("/api/v1/toppings", require("./router/toppingsRoute"));
-app.use("/api/v1/guest-user", require("./router/guesUserRoute"));
+
 app.use("/api/v1/card", require("./router/cardRoute"));
 app.use("/api/v1/orders", require("./router/ordersRoute"));
 app.use("/api/v1/settings", require("./router/settingsRoute"));

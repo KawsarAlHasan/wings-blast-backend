@@ -696,6 +696,14 @@ exports.getSingleOrder = async (req, res) => {
             price: toppings.price,
             isPaid: toppings.isPaid,
           })),
+        sauce: addons
+          .filter((addon) => addon.type === "sauce")
+          .map((sauce) => ({
+            name: sauce.name,
+            quantity: sauce.quantity,
+            price: sauce.price,
+            isPaid: sauce.isPaid,
+          })),
         sandCust: addons
           .filter((addon) => addon.type === "sandCust")
           .map((sandCust) => ({

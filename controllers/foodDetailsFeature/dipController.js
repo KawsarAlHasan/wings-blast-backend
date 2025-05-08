@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../../config/db");
 
 // create Dip
 exports.createDip = async (req, res) => {

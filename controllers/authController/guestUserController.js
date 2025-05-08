@@ -1,5 +1,5 @@
-const db = require("../config/db");
-const { generateGuestUserToken } = require("../config/guestUserToken");
+const db = require("../../config/db");
+const { generateGuestUserToken } = require("../../config/guestUserToken");
 
 // create GuestUser
 exports.createGuestUser = async (req, res) => {

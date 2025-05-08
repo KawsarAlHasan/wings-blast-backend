@@ -1,6 +1,6 @@
-const db = require("../config/db");
+const db = require("../../config/db");
 const bcrypt = require("bcrypt");
-const { generateAdminToken } = require("../config/adminToken");
+const { generateAdminToken } = require("../../config/adminToken");
 
 // admin login
 exports.adminLogin = async (req, res) => {
