@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../../config/db");
 
 // create food Details
 exports.createFoodDetails = async (req, res) => {
@@ -23,6 +23,7 @@ exports.createFoodDetails = async (req, res) => {
       sandCust,
       comboSide,
       ricePlatter,
+      sauces,
       upgrade_food_details,
     } = req.body;
 
@@ -46,6 +47,7 @@ exports.createFoodDetails = async (req, res) => {
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
     const parsedComboSide = comboSide ? JSON.parse(comboSide) : [];
     const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
+    const parsedSauces = sauces ? JSON.parse(sauces) : [];
     const parsedUpgradeFoodDetails = upgrade_food_details
       ? JSON.parse(upgrade_food_details)
       : [];
@@ -154,6 +156,19 @@ exports.createFoodDetails = async (req, res) => {
         food_details_id,
         "rice_platter",
         fff.side_id,
+        fff.isPaid,
+      ]);
+      await db.query(query, [values]);
+    }
+
+    // sauce
+    if (Array.isArray(parsedSauces) && parsedSauces.length > 0) {
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedSauces.map((fff) => [
+        food_details_id,
+        "sauce",
+        fff.sauce_id,
         fff.isPaid,
       ]);
       await db.query(query, [values]);
@@ -423,7 +438,7 @@ exports.getSingleFoodDetails = async (req, res) => {
       if (addon.type === "Flavor") {
         if (addon.how_many_select > 0) {
           const [flavorRows] = await db.query(
-            "SELECT * FROM flavor ORDER BY sn_number ASC"
+            "SELECT * FROM flavor WHERE status = 'Active' ORDER BY sn_number ASC"
           );
 
           feature["flavor"] = {
@@ -433,14 +448,23 @@ exports.getSingleFoodDetails = async (req, res) => {
         }
       }
 
-      if (addon.type === "Dip") {
-        if (addon.how_many_select > 0) {
-          const [rows] = await db.query("SELECT * FROM dip");
+      if (
+        addon.type === "Dip" &&
+        (addon.how_many_select > 0 || addon.is_extra_addon > 0)
+      ) {
+        const [rows] = await db.query(
+          "SELECT * FROM dip WHERE status = 'Active'"
+        );
 
+        if (addon.how_many_select > 0) {
           feature["dip"] = {
             ...addon,
             data: rows,
           };
+        }
+
+        if (addon.is_extra_addon > 0) {
+          feature["extraDips"] = rows;
         }
       }
 
@@ -465,6 +489,14 @@ exports.getSingleFoodDetails = async (req, res) => {
             data: rows,
           };
         }
+
+        if (addon.is_extra_addon > 0) {
+          const [extraAddon] = await db.query(
+            "SELECT * FROM side WHERE status = 'Active'"
+          );
+
+          feature["extraSide"] = extraAddon;
+        }
       }
 
       if (addon.type === "Drink") {
@@ -486,6 +518,14 @@ exports.getSingleFoodDetails = async (req, res) => {
           ...addon,
           data: rows,
         };
+
+        if (addon.is_extra_addon > 0) {
+          const [extraAddon] = await db.query(
+            "SELECT * FROM drink WHERE status = 'Active'"
+          );
+
+          feature["extraDrink"] = extraAddon;
+        }
       }
 
       if (addon.type === "Bakery") {
@@ -551,22 +591,32 @@ exports.getSingleFoodDetails = async (req, res) => {
         };
       }
 
+      if (addon.type === "Sauce") {
+        const [rows] = await db.query(
+          `SELECT
+          fff.type_id AS id,
+          sc.name,
+          sc.image,
+          sc.cal,
+          sc.price,
+          fff.isPaid
+          FROM feature_for_food fff
+          LEFT JOIN sauce sc ON fff.type_id = sc.id
+          WHERE fff.food_details_id = ? AND fff.type = ?`,
+          [id, "sauce"]
+        );
+
+        feature["sauce"] = {
+          ...addon,
+          data: rows,
+        };
+      }
+
       if (addon.type === "Topping") {
         if (addon.how_many_select > 0) {
           const [rows] = await db.query("SELECT * FROM toppings");
 
           feature["topping"] = {
-            ...addon,
-            data: rows,
-          };
-        }
-      }
-
-      if (addon.type === "Sauce") {
-        if (addon.how_many_select > 0) {
-          const [rows] = await db.query("SELECT * FROM sauce");
-
-          feature["sauce"] = {
             ...addon,
             data: rows,
           };

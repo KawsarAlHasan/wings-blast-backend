@@ -1,8 +1,8 @@
 const express = require("express");
 
-const verifyAdmin = require("../middleware/verifyAdmin");
+const verifyAdmin = require("../../middleware/verifyAdmin");
 
-const uploadImage = require("../middleware/imagesUploader");
+const uploadImage = require("../../middleware/imagesUploader");
 const {
   createFoodDetails,
   getAllFoodDetails,
@@ -13,7 +13,7 @@ const {
   getAllFoodDetailsForUser,
   getAllFoodDetailsForAdminPanel,
   discountFoodDetails,
-} = require("../controllers/foodDeatailsController");
+} = require("../../controllers/foodDetails/foodDeatailsController");
 
 const router = express.Router();
 

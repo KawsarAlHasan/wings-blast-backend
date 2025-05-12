@@ -43,20 +43,25 @@ app.use("/api/v1/user", require("./router/authRoute/userRoute"));
 app.use("/api/v1/guest-user", require("./router/authRoute/guesUserRoute"));
 app.use("/api/v1/forgot", require("./router/authRoute/forgotPassword"));
 
+// food details
+app.use(
+  "/api/v1/food-details",
+  require("./router/foodDetailsRoute/foodDetailsRoute")
+);
+
 // product features
 app.use(
   "/api/v1/beverage",
   require("./router/foodDetailsFeature/beverageRoute")
 );
 app.use("/api/v1/sauce", require("./router/foodDetailsFeature/sauceRoute"));
+app.use("/api/v1/dip", require("./router/foodDetailsFeature/dipRoute"));
 
 app.use("/api/v1/category", require("./router/categoryRouter"));
 app.use("/api/v1/flavor", require("./router/flavorRoute"));
 app.use("/api/v1/foodmenu", require("./router/foodMenuRoute"));
-app.use("/api/v1/food-details", require("./router/foodDetailsRoute"));
 app.use("/api/v1/feature", require("./router/featureRoute"));
 app.use("/api/v1/product-feature", require("./router/productFeatureRoute"));
-app.use("/api/v1/dip", require("./router/foodDetailsFeature/dipRoute"));
 app.use("/api/v1/side", require("./router/sideRoute"));
 app.use("/api/v1/drink", require("./router/drinkRoute"));
 app.use("/api/v1/drink-name", require("./router/drinkNameRoute"));
@@ -79,6 +84,8 @@ app.use("/api/v1/voucher", require("./router/vouchersRoute"));
 app.use("/api/v1/user-voucher", require("./router/userVouchersRoute"));
 app.use("/api/v1/compare", require("./router/compareRoute"));
 app.use("/test", require("./test"));
+
+app.use("/api/v1/global", require("./router/globalRoute"));
 
 // settings
 app.use("/api/v1/banner", require("./router/settings/bannerRoute"));

@@ -148,6 +148,42 @@ exports.updateDip = async (req, res) => {
   }
 };
 
+// update dip Status
+exports.updatedipStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { status } = req.body;
+
+    const [dipPreData] = await db.query(`SELECT * FROM dip WHERE id=?`, [id]);
+
+    if (!dipPreData || dipPreData.length == 0) {
+      return res.status(201).send({
+        success: false,
+        message: "dip not found",
+      });
+    }
+
+    // Execute the update query
+    const [result] = await db.query("UPDATE dip SET status = ? WHERE id = ?", [
+      status,
+      id,
+    ]);
+
+    // Success response
+    res.status(200).send({
+      success: true,
+      message: "dip Status updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating dip",
+      error: error.message,
+    });
+  }
+};
+
 // delete Dip
 exports.deleteDip = async (req, res) => {
   try {
