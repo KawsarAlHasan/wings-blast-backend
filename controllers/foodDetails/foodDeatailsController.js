@@ -22,6 +22,7 @@ exports.createFoodDetails = async (req, res) => {
       beverages,
       sandCust,
       comboSide,
+      fishChoice,
       ricePlatter,
       sauces,
       upgrade_food_details,
@@ -46,6 +47,7 @@ exports.createFoodDetails = async (req, res) => {
     const parsedBeverages = beverages ? JSON.parse(beverages) : [];
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
     const parsedComboSide = comboSide ? JSON.parse(comboSide) : [];
+    const parsedFishChoice = fishChoice ? JSON.parse(fishChoice) : [];
     const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
     const parsedSauces = sauces ? JSON.parse(sauces) : [];
     const parsedUpgradeFoodDetails = upgrade_food_details
@@ -143,6 +145,19 @@ exports.createFoodDetails = async (req, res) => {
         food_details_id,
         "combo_side",
         fff.side_id,
+        fff.isPaid,
+      ]);
+      await db.query(query, [values]);
+    }
+
+    // Fish Choice
+    if (Array.isArray(parsedFishChoice) && parsedFishChoice.length > 0) {
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedFishChoice.map((fff) => [
+        food_details_id,
+        "fish_choice",
+        fff.fish_id,
         fff.isPaid,
       ]);
       await db.query(query, [values]);
@@ -496,6 +511,29 @@ exports.getSingleFoodDetails = async (req, res) => {
           );
 
           feature["extraSide"] = extraAddon;
+        }
+      }
+
+      if (addon.type === "Fish Choice") {
+        if (addon.how_many_select > 0) {
+          const [rows] = await db.query(
+            `SELECT
+            fff.type_id AS id,
+            fc.name,
+            fc.image,
+            fc.cal,
+            fc.price,
+            fff.isPaid
+            FROM feature_for_food fff
+            LEFT JOIN fish_choice fc ON fff.type_id = fc.id
+            WHERE fff.food_details_id = ? AND fff.type = ?`,
+            [id, "fish_choice"]
+          );
+
+          feature["fish_choice"] = {
+            ...addon,
+            data: rows,
+          };
         }
       }
 

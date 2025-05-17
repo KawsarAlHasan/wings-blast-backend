@@ -19,7 +19,7 @@ const uploadImage = require("../../middleware/imagesUploader");
 
 const router = express.Router();
 
-router.post("/firebase-phone", verifyToken);
+router.post("/firebase-login", verifyToken);
 router.post("/signup", signUpUser);
 router.post("/login", userLogin);
 router.post("/social-login", userSocialMediaLogin);

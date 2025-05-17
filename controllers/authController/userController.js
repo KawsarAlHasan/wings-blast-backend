@@ -9,22 +9,21 @@ const firebaseAdmin = require("../../config/firebase");
 exports.verifyToken = async (req, res) => {
   const { token, first_name, last_name } = req.body;
 
-  if (!token || !first_name || !last_name) {
+  if (!token) {
     return res.status(201).send({
       success: false,
-      message: "token, first_name, last_name is required in body",
+      message: "token is required in body",
     });
   }
 
   try {
     const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
-    const { uid, phone_number } = decodedToken;
+    const { uid, name, picture, email, phone_number } = decodedToken;
 
     // Check if user already exists
-    const [checkData] = await db.query(
-      `SELECT * FROM users WHERE uid=? AND phone_number=?`,
-      [uid, phone_number]
-    );
+    const [checkData] = await db.query(`SELECT * FROM users WHERE uid=?`, [
+      uid,
+    ]);
 
     if (checkData.length > 0) {
       const existingUser = checkData[0];
@@ -32,13 +31,20 @@ exports.verifyToken = async (req, res) => {
 
       res.status(200).json({
         success: true,
-        message: "User already exists",
+        message: "User Login Successfully",
         token: authToken,
       });
     } else {
       const [result] = await db.query(
-        `INSERT INTO users (uid, first_name, last_name, phone) VALUES (?, ?, ?, ?)`,
-        [uid, first_name || "", last_name || "", phone_number]
+        `INSERT INTO users (uid, first_name, last_name, email, phone, profile_pic) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          uid,
+          name || first_name || "",
+          last_name || "",
+          email || "",
+          phone_number || "",
+          picture || "",
+        ]
       );
 
       const authToken = generateUserToken({ id: result.insertId });
@@ -337,18 +343,31 @@ exports.getSingleUser = async (req, res) => {
       });
     }
 
-    const [data] = await db.query(`SELECT * FROM users WHERE id=? `, [userId]);
-    if (!data || data.length === 0) {
+    const [user] = await db.query(`SELECT * FROM users WHERE id=? `, [userId]);
+    if (!user || user.length === 0) {
       return res.status(201).send({
         success: false,
         message: "No user found",
       });
     }
-    res.status(200).send(data[0]);
+
+    const [orders] = await db.query(
+      "SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC",
+      [userId]
+    );
+
+    res.status(200).send({
+      success: true,
+      message: "Single User",
+      data: {
+        user: user[0],
+        orders: orders,
+      },
+    });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in getting user",
+      message: "Inernal Server Error",
       error: error.message,
     });
   }

@@ -56,6 +56,10 @@ app.use(
 );
 app.use("/api/v1/sauce", require("./router/foodDetailsFeature/sauceRoute"));
 app.use("/api/v1/dip", require("./router/foodDetailsFeature/dipRoute"));
+app.use(
+  "/api/v1/fish-choice",
+  require("./router/foodDetailsFeature/fishChoiceRoute")
+);
 
 app.use("/api/v1/category", require("./router/categoryRouter"));
 app.use("/api/v1/flavor", require("./router/flavorRoute"));
