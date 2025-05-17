@@ -728,6 +728,14 @@ exports.getSingleOrder = async (req, res) => {
             price: side.price,
             isPaid: side.isPaid,
           })),
+        fishChoice: addons
+          .filter((addon) => addon.type === "fishChoice")
+          .map((fishChoice) => ({
+            name: fishChoice.name,
+            quantity: fishChoice.quantity,
+            price: fishChoice.price,
+            isPaid: fishChoice.isPaid,
+          })),
         drink: addons
           .filter((addon) => addon.type === "drink")
           .map((drink) => ({
