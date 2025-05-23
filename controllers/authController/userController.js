@@ -32,7 +32,10 @@ exports.verifyToken = async (req, res) => {
       res.status(200).json({
         success: true,
         message: "User Login Successfully",
-        token: authToken,
+        data: {
+          user: existingUser,
+          token: authToken,
+        },
       });
     } else {
       const [result] = await db.query(
@@ -49,10 +52,17 @@ exports.verifyToken = async (req, res) => {
 
       const authToken = generateUserToken({ id: result.insertId });
 
+      const [user] = await db.query(`SELECT * FROM users WHERE id=?`, [
+        result.insertId,
+      ]);
+
       res.status(200).json({
         success: true,
         message: "User registered",
-        token: authToken,
+        data: {
+          user: user[0],
+          token: authToken,
+        },
       });
     }
   } catch (error) {

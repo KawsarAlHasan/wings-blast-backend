@@ -710,6 +710,8 @@ exports.updateFoodDetails = async (req, res) => {
       is_buy_one_get_one,
       addons,
       drinks,
+      sauces,
+      fishChoice,
       beverages,
       sandCust,
       comboSide,
@@ -724,6 +726,8 @@ exports.updateFoodDetails = async (req, res) => {
     const parsedSandCust = sandCust ? JSON.parse(sandCust) : [];
     const parsedComboSide = comboSide ? JSON.parse(comboSide) : [];
     const parsedPlatterSides = ricePlatter ? JSON.parse(ricePlatter) : [];
+    const parsedSauces = sauces ? JSON.parse(sauces) : [];
+    const parsedFishChoice = fishChoice ? JSON.parse(fishChoice) : [];
     const parsedUpgradeFoodDetails = upgrade_food_details
       ? JSON.parse(upgrade_food_details)
       : [];
@@ -860,6 +864,32 @@ exports.updateFoodDetails = async (req, res) => {
         food_details_id,
         "rice_platter",
         fff.side_id,
+        fff.isPaid,
+      ]);
+      await db.query(query, [values]);
+    }
+
+    // parsedSauces
+    if (Array.isArray(parsedSauces) && parsedSauces.length > 0) {
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedSauces.map((fff) => [
+        food_details_id,
+        "sauce",
+        fff.sauce_id,
+        fff.isPaid,
+      ]);
+      await db.query(query, [values]);
+    }
+
+    // parsedFishChoice
+    if (Array.isArray(parsedFishChoice) && parsedFishChoice.length > 0) {
+      const query =
+        "INSERT INTO feature_for_food (food_details_id, type, type_id, isPaid) VALUES ?";
+      const values = parsedFishChoice.map((fff) => [
+        food_details_id,
+        "fish_choice",
+        fff.fish_id,
         fff.isPaid,
       ]);
       await db.query(query, [values]);

@@ -176,10 +176,10 @@ exports.sendOfferUser = async (req, res) => {
       [type_id, type, user_ids]
     );
 
-    const [users] = await db.query(
-      `SELECT first_name, last_name, email FROM users WHERE id IN (?)`,
-      [user_ids]
-    );
+    // const [users] = await db.query(
+    //   `SELECT id, first_name, last_name, email FROM users WHERE id IN (?)`,
+    //   [user_ids]
+    // );
 
     const existingUserIds = existingUsers.map((user) => user.user_id);
     const newUserIds = user_ids.filter((id) => !existingUserIds.includes(id));
@@ -397,7 +397,7 @@ exports.getMyDiscountsOffers = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const [data] = await db.query(
-      `SELECT id, first_name, last_name, email FROM users`
+      `SELECT id, first_name, last_name, email, phone FROM users`
     );
 
     res.status(200).send({
@@ -422,9 +422,11 @@ exports.getOffersSendUser = async (req, res) => {
     let query = `
       SELECT
         up.*,
+        u.id AS user_id,
         u.first_name AS first_name,
         u.last_name AS last_name,
-        u.email AS email
+        u.email AS email,
+        u.phone AS phone
       FROM user_offers up
       LEFT JOIN users u ON up.user_id = u.id
     `;

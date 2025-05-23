@@ -92,6 +92,7 @@ app.use("/test", require("./test"));
 app.use("/api/v1/global", require("./router/globalRoute"));
 
 // settings
+app.use("/api/v1/dashboard", require("./router/settings/dashboardRoute"));
 app.use("/api/v1/banner", require("./router/settings/bannerRoute"));
 
 notifyAdminBeforeOrder();
