@@ -275,6 +275,7 @@ exports.getFoodOrderInformation = async (req, res) => {
       FROM orders_foods
       WHERE order_id IN (?)
       GROUP BY name
+      ORDER BY quantity DESC
     `,
       [orderIds]
     );
@@ -284,6 +285,89 @@ exports.getFoodOrderInformation = async (req, res) => {
       message: "Food order information retrieved successfully",
       length: foodItems.length,
       data: foodItems,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+exports.getYearlyOrders = async (req, res) => {
+  try {
+    const { year } = req.query;
+    const currentDate = new Date();
+    let monthsData = [];
+
+    if (year) {
+      // Year is provided - fetch data from Jan to Dec of that year
+      for (let month = 0; month < 12; month++) {
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+        const [result] = await db.query(
+          `SELECT COUNT(*) as totalOrders, COALESCE(SUM(total_price), 0) as totalAmount 
+           FROM orders 
+           WHERE created_at BETWEEN ? AND ? AND status != 'Canceled'`,
+          [startDate, endDate]
+        );
+
+        monthsData.push({
+          month: monthNames[month],
+          totalOrders: result[0].totalOrders,
+          totalAmount: result[0].totalAmount,
+        });
+      }
+    } else {
+      // Year not provided - get past 12 months from current date
+      for (let i = 0; i < 12; i++) {
+        const date = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() - 11 + i,
+          1
+        );
+        const month = date.getMonth();
+        const year = date.getFullYear();
+
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+        const [result] = await db.query(
+          `SELECT COUNT(*) as totalOrders, COALESCE(SUM(total_price), 0) as totalAmount 
+           FROM orders 
+           WHERE created_at BETWEEN ? AND ? AND status != 'Canceled'`,
+          [startDate, endDate]
+        );
+
+        monthsData.push({
+          month: `${monthNames[month]} ${year}`,
+          totalOrders: result[0].totalOrders,
+          totalAmount: result[0].totalAmount,
+        });
+      }
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Yearly Orders Data",
+      data: monthsData,
     });
   } catch (error) {
     res.status(500).send({
