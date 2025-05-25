@@ -78,10 +78,13 @@ exports.getDashboard = async (req, res) => {
 // get order information
 exports.getOrderInformation = async (req, res) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, deliveryType } = req.query;
 
     const startDate = start_date ? new Date(start_date) : null;
     const endDate = end_date ? new Date(end_date) : null;
+
+    const deliveryTypes =
+      deliveryType && deliveryType !== "all-data" ? deliveryType : null;
 
     // Query for total sales
     let salesQuery = "";
@@ -90,51 +93,108 @@ exports.getOrderInformation = async (req, res) => {
     let canceledQuery = "";
     let canceledParams = [];
 
+    let deliveryTypeQuery = "";
+    let deliveryTypeParams = [];
+
     if (startDate && endDate) {
+      // Sales Query
       salesQuery = `
         SELECT
-        SUM(total_price) AS totalPrice,
-        SUM(sub_total) AS subTotal,
-        SUM(tax) AS totalTax,
-        SUM(fees) AS totalFees,
-        SUM(delivery_fee) AS deliveryFee,
-        SUM(coupon_discount) AS couponDiscount
-         FROM orders
-        WHERE status != 'Canceled' AND created_at BETWEEN ? AND ?
+          SUM(total_price) AS totalPrice,
+          SUM(sub_total) AS subTotal,
+          SUM(tax) AS totalTax,
+          SUM(fees) AS totalFees,
+          SUM(delivery_fee) AS deliveryFee,
+          SUM(coupon_discount) AS couponDiscount
+        FROM orders
+        WHERE status != 'Canceled'
+          AND created_at BETWEEN ? AND ?
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
       `;
-      salesParams = [startDate, endDate];
+      salesParams = deliveryTypes
+        ? [startDate, endDate, deliveryTypes]
+        : [startDate, endDate];
 
+      // Canceled Orders Query
       canceledQuery = `
-        SELECT
-        SUM(total_price) AS totalPrice FROM orders
-        WHERE status = 'Canceled' AND created_at BETWEEN ? AND ?
+        SELECT SUM(total_price) AS totalPrice
+        FROM orders
+        WHERE status = 'Canceled'
+          AND created_at BETWEEN ? AND ?
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
       `;
-      canceledParams = [startDate, endDate];
+      canceledParams = deliveryTypes
+        ? [startDate, endDate, deliveryTypes]
+        : [startDate, endDate];
+
+      // Delivery Type Summary (only shown when deliveryType is not filtered)
+      deliveryTypeQuery = `
+        SELECT delivery_type, COUNT(*) AS total
+        FROM orders
+        WHERE status != 'Canceled'
+          AND created_at BETWEEN ? AND ?
+        GROUP BY delivery_type
+      `;
+      deliveryTypeParams = [startDate, endDate];
     } else {
+      // Sales Query
       salesQuery = `
         SELECT
-        SUM(total_price) AS totalPrice,
-        SUM(sub_total) AS subTotal,
-        SUM(tax) AS totalTax,
-        SUM(fees) AS totalFees,
-        SUM(delivery_fee) AS deliveryFee,
-        SUM(coupon_discount) AS couponDiscount
-         FROM orders
-        WHERE status != 'Canceled' AND MONTH(created_at) = MONTH(CURRENT_DATE())
-        AND YEAR(created_at) = YEAR(CURRENT_DATE())
+          SUM(total_price) AS totalPrice,
+          SUM(sub_total) AS subTotal,
+          SUM(tax) AS totalTax,
+          SUM(fees) AS totalFees,
+          SUM(delivery_fee) AS deliveryFee,
+          SUM(coupon_discount) AS couponDiscount
+        FROM orders
+        WHERE status != 'Canceled'
+          AND MONTH(created_at) = MONTH(CURRENT_DATE())
+          AND YEAR(created_at) = YEAR(CURRENT_DATE())
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
       `;
+      salesParams = deliveryTypes ? [deliveryTypes] : [];
 
+      // Canceled Orders Query
       canceledQuery = `
-        SELECT
-        SUM(total_price) AS totalPrice
-         FROM orders
-        WHERE  status = 'Canceled' AND MONTH(created_at) = MONTH(CURRENT_DATE())
-        AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        SELECT SUM(total_price) AS totalPrice
+        FROM orders
+        WHERE status = 'Canceled'
+          AND MONTH(created_at) = MONTH(CURRENT_DATE())
+          AND YEAR(created_at) = YEAR(CURRENT_DATE())
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
+      `;
+      canceledParams = deliveryTypes ? [deliveryTypes] : [];
+
+      // Delivery Type Summary
+      deliveryTypeQuery = `
+        SELECT delivery_type, COUNT(*) AS total
+        FROM orders
+        WHERE status != 'Canceled'
+          AND MONTH(created_at) = MONTH(CURRENT_DATE())
+          AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        GROUP BY delivery_type
       `;
     }
 
+    // Execute queries
     const [totalSalesResult] = await db.query(salesQuery, salesParams);
     const [totalCanceledOrders] = await db.query(canceledQuery, canceledParams);
+    const [deliveryTypeResult] = await db.query(
+      deliveryTypeQuery,
+      deliveryTypeParams
+    );
+
+    // Map delivery types
+    let deliveryOrders = 0;
+    let carryoutOrders = 0;
+
+    deliveryTypeResult?.forEach((item) => {
+      if (item.delivery_type?.toLowerCase() === "delivery") {
+        deliveryOrders = item.total;
+      } else if (item.delivery_type?.toLowerCase() === "carryout") {
+        carryoutOrders = item.total;
+      }
+    });
 
     res.status(200).send({
       success: true,
@@ -142,6 +202,8 @@ exports.getOrderInformation = async (req, res) => {
       data: {
         ...totalSalesResult[0],
         refunds: totalCanceledOrders[0].totalPrice || 0,
+        carryoutOrders,
+        deliveryOrders,
       },
     });
   } catch (error) {
@@ -153,81 +215,16 @@ exports.getOrderInformation = async (req, res) => {
   }
 };
 
-// exports.getFoodOrderInformation = async (req, res) => {
-//   try {
-//     const { start_date, end_date } = req.query;
-
-//     const startDate = start_date ? new Date(start_date) : null;
-//     const endDate = end_date ? new Date(end_date) : null;
-
-//     // Step 1: Get all order IDs in given date range
-//     let ordersQuery = "";
-//     let ordersParams = [];
-
-//     if (startDate && endDate) {
-//       ordersQuery = `
-//         SELECT id FROM orders
-//         WHERE status != 'Canceled' AND created_at BETWEEN ? AND ?
-//       `;
-//       ordersParams = [startDate, endDate];
-//     } else {
-//       ordersQuery = `
-//         SELECT id FROM orders
-//         WHERE status != 'Canceled'
-//         AND MONTH(created_at) = MONTH(CURRENT_DATE())
-//         AND YEAR(created_at) = YEAR(CURRENT_DATE())
-//       `;
-//     }
-
-//     const [orders] = await db.query(ordersQuery, ordersParams);
-
-//     if (orders.length === 0) {
-//       return res.status(200).send({
-//         success: true,
-//         message: "No orders found",
-//         data: [],
-//       });
-//     }
-
-//     const orderIds = orders.map((order) => order.id);
-
-//     // Step 2: Aggregate food item data from orders_foods
-//     const [foodSummary] = await db.query(
-//       `
-//       SELECT
-//         food_details_id AS id,
-//         name,
-//         price,
-//         SUM(quantity) AS quantity,
-//         SUM(price * quantity) AS total_price
-//       FROM orders_foods
-//       WHERE order_id IN (?)
-//       GROUP BY food_details_id, name, price
-//       `,
-//       [orderIds]
-//     );
-
-//     res.status(200).send({
-//       success: true,
-//       message: "Food order summary",
-//       data: foodSummary,
-//     });
-//   } catch (error) {
-//     res.status(500).send({
-//       success: false,
-//       message: "Internal Server Error",
-//       error: error.message,
-//     });
-//   }
-// };
-
 // get single food order
 exports.getFoodOrderInformation = async (req, res) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, deliveryType } = req.query;
 
     const startDate = start_date ? new Date(start_date) : null;
     const endDate = end_date ? new Date(end_date) : null;
+
+    const deliveryTypes =
+      deliveryType && deliveryType !== "all-data" ? deliveryType : null;
 
     // Query for order IDs
     let ordersQuery = "";
@@ -237,16 +234,23 @@ exports.getFoodOrderInformation = async (req, res) => {
       ordersQuery = `
         SELECT id 
         FROM orders
-        WHERE status != 'Canceled' AND created_at BETWEEN ? AND ?
+        WHERE status != 'Canceled'
+          AND created_at BETWEEN ? AND ?
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
       `;
-      ordersParams = [startDate, endDate];
+      ordersParams = deliveryTypes
+        ? [startDate, endDate, deliveryTypes]
+        : [startDate, endDate];
     } else {
       ordersQuery = `
         SELECT id
         FROM orders
-        WHERE status != 'Canceled' AND MONTH(created_at) = MONTH(CURRENT_DATE())
-        AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        WHERE status != 'Canceled'
+          AND MONTH(created_at) = MONTH(CURRENT_DATE())
+          AND YEAR(created_at) = YEAR(CURRENT_DATE())
+          ${deliveryTypes ? "AND delivery_type = ?" : ""}
       `;
+      ordersParams = deliveryTypes ? [deliveryTypes] : [];
     }
 
     const [orders] = await db.query(ordersQuery, ordersParams);
@@ -274,7 +278,7 @@ exports.getFoodOrderInformation = async (req, res) => {
         SUM(price * quantity) as total_price
       FROM orders_foods
       WHERE order_id IN (?)
-      GROUP BY name
+      GROUP BY food_details_id, name, price
       ORDER BY quantity DESC
     `,
       [orderIds]
