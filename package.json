@@ -27,6 +27,7 @@
     "nodemon": "^3.1.7",
     "punycode": "^2.3.1",
     "socket.io": "^4.8.1",
-    "stripe": "^17.4.0"
+    "stripe": "^17.4.0",
+    "twilio": "^5.6.1"
   }
 }

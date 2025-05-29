@@ -2,8 +2,61 @@ const db = require("../../config/db");
 const bcrypt = require("bcrypt");
 const { generateUserToken } = require("../../config/userToken");
 const { sendMail } = require("../../middleware/sandEmail");
-
+const { sendOtp } = require("../../middleware/sendOtp");
+const verifyOtp = require("../../middleware/verifyOtp");
 const firebaseAdmin = require("../../config/firebase");
+
+// send otp by twilio
+exports.sendOtpByTwilio = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).send({
+        success: false,
+        message: "phone is required in body",
+      });
+    }
+
+    await sendOtp(phone);
+    res.status(200).json({
+      success: true,
+      message: "OTP sent Successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+// verify twilio otp
+exports.verifyTwilioOpt = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).send({
+        success: false,
+        message: "phone & otp is required in body",
+      });
+    }
+
+    const token = await verifyOtp(phone, otp);
+    res.status(200).json({
+      success: true,
+      token,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
 
 // verify user
 exports.verifyToken = async (req, res) => {

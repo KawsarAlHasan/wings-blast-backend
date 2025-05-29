@@ -1121,3 +1121,41 @@ exports.discountFoodDetails = async (req, res) => {
     });
   }
 };
+
+exports.getAI = async (req, res) => {
+  try {
+    const [data] = await db.query(`SELECT id FROM food_details`);
+
+    let result = "";
+
+    for (const food of data) {
+      const foodId = food.id;
+
+      const flavor = `('${foodId}','Flavor','2','10','1','0','0'),`;
+      const dip = `('${foodId}','Dip','2','10','2','1','1'),`;
+      const comboSide = `('${foodId}','Combo Side','2','10','3','1','0'),`;
+      const bakery = `('${foodId}','Bakery','0','0','4','0','1'),`;
+      const drink = `('${foodId}','Drink','0','0','5','1','1'),`;
+      const ricePlatter = `('${foodId}','Rice Platter','2','2','6','0','1'),`;
+      const sandwichCustomize = `('${foodId}','Sandwich Customize','0','0','7','0','1'),`;
+      const topping = `('${foodId}','Topping','1','0','8','0','0'),`;
+      const sauce = `('${foodId}','Sauce','0','0','9','0','1'),`;
+      const fishChoice = `('${foodId}','Fish Choice','2','4','10','0','1'),`;
+
+      result += `${flavor} ${dip} ${comboSide} ${bakery} ${drink} ${ricePlatter} ${sandwichCustomize} ${topping} ${sauce} ${fishChoice}`;
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Get All Discount Food Details",
+      totalProduct: data.length,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};

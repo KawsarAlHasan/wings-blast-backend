@@ -12,6 +12,8 @@ const {
   deleteUser,
   userSocialMediaLogin,
   verifyToken,
+  sendOtpByTwilio,
+  verifyTwilioOpt,
 } = require("../../controllers/authController/userController");
 const verifyUser = require("../../middleware/verifyUser");
 const verifyAdmin = require("../../middleware/verifyAdmin");
@@ -19,6 +21,8 @@ const uploadImage = require("../../middleware/imagesUploader");
 
 const router = express.Router();
 
+router.post("/send-twilio-otp", sendOtpByTwilio);
+router.post("/verify-twilio-otp", verifyTwilioOpt);
 router.post("/firebase-login", verifyToken);
 router.post("/signup", signUpUser);
 router.post("/login", userLogin);

@@ -13,6 +13,7 @@ const {
   getAllFoodDetailsForUser,
   getAllFoodDetailsForAdminPanel,
   discountFoodDetails,
+  getAI,
 } = require("../../controllers/foodDetails/foodDeatailsController");
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.post(
 router.get("/admin-panel", getAllFoodDetailsForAdminPanel);
 router.get("/", getAllFoodDetailsForUser);
 router.get("/all", getAllFoodDetails);
+router.get("/ai", getAI);
 router.get("/discount", discountFoodDetails);
 router.get("/:id", getSingleFoodDetails);
 router.put(

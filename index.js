@@ -37,6 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 // Routes
+
 // auth
 app.use("/api/v1/admin", require("./router/authRoute/adminRoute"));
 app.use("/api/v1/user", require("./router/authRoute/userRoute"));
